@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\PrPdfController;
 use App\Livewire\Dashboard;
 use App\Livewire\PrForm;
 use App\Livewire\PrList;
@@ -62,6 +63,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}/edit', PrForm::class)
             ->middleware('permission:pr.edit')
             ->name('edit');
+
+        // Download PDF
+        Route::get('/{id}/pdf', [PrPdfController::class, 'download'])
+            ->middleware('permission:pr.download')
+            ->name('pdf');
+
+        // Preview PDF (view di browser)
+        Route::get('/{id}/preview', [PrPdfController::class, 'preview'])
+            ->middleware('permission:pr.download')
+            ->name('preview');
+
     });
 
     /*

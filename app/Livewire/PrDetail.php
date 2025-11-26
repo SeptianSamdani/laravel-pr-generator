@@ -5,7 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\PurchaseRequisition;
 use Illuminate\Support\Facades\Auth;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\PdfGeneratorService;
 
 class PrDetail extends Component
 {
@@ -14,6 +14,13 @@ class PrDetail extends Component
     public $canEdit = false;
     public $canDelete = false;
     public $canApprove = false;
+
+    protected $pdfService;
+
+    public function boot(PdfGeneratorService $pdfService)
+    {
+        $this->pdfService = $pdfService;
+    }
 
     public function mount($id)
     {
@@ -72,13 +79,15 @@ class PrDetail extends Component
 
     public function downloadPdf()
     {
+        // Check permission
+        if (!Auth::user()->can('pr.download')) {
+            session()->flash('error', 'Anda tidak memiliki akses untuk download PDF');
+            return;
+        }
+
         // Load PR with relationships
         $pr = PurchaseRequisition::with(['items', 'outlet', 'creator', 'approver'])
             ->findOrFail($this->prId);
-
-        // Generate PDF
-        $pdf = Pdf::loadView('pdf.pr-template', ['pr' => $pr])
-            ->setPaper('a4', 'portrait');
 
         // Log activity
         activity()
@@ -86,9 +95,9 @@ class PrDetail extends Component
             ->performedOn($pr)
             ->log('PR PDF downloaded');
 
-        return response()->streamDownload(function () use ($pdf) {
-            echo $pdf->stream();
-        }, 'PR-' . $pr->pr_number . '.pdf');
+        // Generate and download PDF using service
+        $pdfService = app(PdfGeneratorService::class);
+        return $pdfService->downloadPdf($pr);
     }
 
     public function submitForApproval()
