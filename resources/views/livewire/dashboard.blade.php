@@ -139,7 +139,7 @@
         <!-- Monthly Chart -->
         <div class="lg:col-span-2 card animate-slide-in">
             <div class="card-header">
-                <h3 class="text-lg font-bold">PR Trends (Last 6 Months)</h3>
+                <h3 class="text-primary-50 text-lg font-bold">PR Trends (Last 6 Months)</h3>
             </div>
             <div class="card-body">
                 <div class="h-64">
@@ -151,7 +151,7 @@
         <!-- Status Distribution -->
         <div class="card animate-slide-in" style="animation-delay: 0.1s;">
             <div class="card-header">
-                <h3 class="text-lg font-bold">Status Distribution</h3>
+                <h3 class="text-primary-50 text-lg font-bold">Status Distribution</h3>
             </div>
             <div class="card-body">
                 <div class="h-64 flex items-center justify-center">
@@ -165,7 +165,7 @@
         <!-- Recent PRs -->
         <div class="lg:col-span-2 card animate-slide-in">
             <div class="card-header flex items-center justify-between">
-                <h3 class="text-lg font-bold">Recent Purchase Requisitions</h3>
+                <h3 class="text-primary-50 text-lg font-bold">Recent Purchase Requisitions</h3>
                 <a href="{{ route('pr.index') }}" class="text-sm text-primary-600 hover:text-primary-700 font-semibold">
                     View all →
                 </a>
@@ -223,7 +223,7 @@
             <!-- Quick Actions -->
             <div class="card animate-slide-in" style="animation-delay: 0.1s;">
                 <div class="card-header">
-                    <h3 class="text-lg font-bold">Quick Actions</h3>
+                    <h3 class="text-primary-50 text-lg font-bold">Quick Actions</h3>
                 </div>
                 <div class="card-body space-y-3">
                     @can('pr.create')
@@ -259,7 +259,7 @@
             <!-- Top Outlets -->
             <div class="card animate-slide-in" style="animation-delay: 0.2s;">
                 <div class="card-header">
-                    <h3 class="text-lg font-bold">Top Outlets</h3>
+                    <h3 class="text-primary-50 text-lg font-bold">Top Outlets</h3>
                 </div>
                 <div class="card-body space-y-4">
                     @forelse($topOutlets as $index => $item)

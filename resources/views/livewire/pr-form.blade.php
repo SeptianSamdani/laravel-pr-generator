@@ -20,7 +20,7 @@
                 <!-- Header Information -->
                 <div class="card animate-fade-in">
                     <div class="card-header">
-                        <h3 class="text-lg font-bold">Informasi Dasar</h3>
+                        <h3 class="text-primary-50 text-lg font-bold">Informasi Dasar</h3>
                     </div>
                     <div class="card-body space-y-4">
                         <!-- Tanggal -->
@@ -93,8 +93,8 @@
 
                 <!-- Items -->
                 <div class="card animate-fade-in" style="animation-delay: 0.1s;">
-                    <div class="card-header flex items-center justify-between">
-                        <h3 class="text-lg font-bold">Detail Item</h3>
+                    <div class="card-header flex items-center justify-between mb-2">
+                        <h3 class="text-primary-50 text-lg font-bold">Detail Item</h3>
                         <button 
                             type="button" 
                             wire:click="addItem"
@@ -231,7 +231,7 @@
                 <!-- Summary -->
                 <div class="card animate-fade-in" style="animation-delay: 0.2s;">
                     <div class="card-header">
-                        <h3 class="text-lg font-bold">Ringkasan</h3>
+                        <h3 class="text-primary-50 text-lg font-bold">Ringkasan</h3>
                     </div>
                     <div class="card-body space-y-4">
                         <div class="flex justify-between items-center pb-3 border-b border-secondary-200">
@@ -254,7 +254,7 @@
                 <!-- Actions -->
                 <div class="card animate-fade-in" style="animation-delay: 0.3s;">
                     <div class="card-header">
-                        <h3 class="text-lg font-bold">Aksi</h3>
+                        <h3 class="text-primary-50 text-lg font-bold">Aksi</h3>
                     </div>
                     <div class="card-body space-y-3">
                         <!-- Submit Button -->

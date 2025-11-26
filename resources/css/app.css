@@ -33,15 +33,15 @@
   }
 
   .btn-primary {
-    @apply btn bg-gradient-to-r from-primary-500 to-primary-600 text-white hover:from-primary-600 hover:to-primary-700 shadow-orange hover:shadow-orange-lg active:scale-95;
+    @apply btn bg-primary-500 text-white hover:bg-primary-600 shadow-orange hover:shadow-orange-lg active:scale-95;
   }
 
   .btn-secondary {
-    @apply btn bg-white border-2 border-secondary-200 text-secondary-700 hover:bg-secondary-50 hover:border-secondary-300 shadow-soft hover:shadow-soft-lg active:scale-95;
+    @apply btn bg-secondary-50 border-2 border-secondary-200 text-secondary-700 hover:bg-secondary-100 hover:border-secondary-300 shadow-soft hover:shadow-soft-lg active:scale-95;
   }
 
   .btn-outline {
-    @apply btn border-2 border-primary-500 text-primary-600 hover:bg-primary-50 active:scale-95;
+    @apply btn-secondary border-2 border-primary-500 text-primary-600 hover:bg-primary-600 hover:text-white hover:border-2 hover:border-white active:scale-95;
   }
 
   .btn-ghost {
@@ -62,7 +62,7 @@
   }
 
   .card-header {
-    @apply bg-gradient-to-r from-orange-light-100 to-orange-light-50 text-secondary-900 px-6 py-4 border-b border-primary-200;
+    @apply bg-orange-500 text-white px-6 py-4 border-b border-primary-200;
   }
 
   .card-orange {
@@ -130,7 +130,7 @@
   }
 
   .table thead {
-    @apply bg-gradient-to-r from-orange-light-200 to-orange-light-100 text-secondary-900;
+    @apply bg-primary-500 text-primary-50;
   }
 
   .table th {
@@ -138,7 +138,7 @@
   }
 
   .table td {
-    @apply px-6 py-4 text-sm border-b border-secondary-100 text-secondary-700;
+    @apply px-6 py-4 text-sm border-b border-secondary-300 text-secondary-700;
   }
 
   .table tbody tr {

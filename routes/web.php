@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
+use App\Livewire\Dashboard;
 use App\Livewire\PrForm;
 use App\Livewire\PrList;
 use App\Livewire\PrDetail;
@@ -32,9 +33,8 @@ Route::middleware('auth')->group(function () {
         return redirect()->route('dashboard');
     });
     
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', Dashboard::class
+    )->name('dashboard');
 
     /*
     |--------------------------------------------------------------------------
