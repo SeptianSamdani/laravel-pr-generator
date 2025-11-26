@@ -6,10 +6,16 @@
     <title>Purchase Requisition - {{ $pr->pr_number }}</title>
 
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: Arial, sans-serif;
             font-size: 11pt;
-            line-height: 1.3;
+            line-height: 1.4;
             color: #000;
         }
 
@@ -21,114 +27,184 @@
         /* HEADER */
         .header {
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #f97316;
         }
 
         .header img {
-            width: 180px;
+            width: 200px;
             margin-bottom: 10px;
         }
 
         .title {
-            font-size: 20pt;
+            font-size: 22pt;
             font-weight: bold;
             text-align: center;
-            margin-top: 5px;
+            margin-top: 10px;
+            margin-bottom: 25px;
+            color: #f97316;
+            letter-spacing: 1px;
+        }
+
+        /* Info Section */
+        .info-section {
             margin-bottom: 20px;
-            text-decoration: underline;
+            padding: 15px;
+            background-color: #fff9f5;
+            border-left: 4px solid #f97316;
         }
 
-        /* Info box */
-        .info-table {
+        .info-row {
+            margin-bottom: 8px;
+            display: table;
             width: 100%;
-            margin-bottom: 15px;
-            border-collapse: collapse;
-        }
-
-        .info-table td {
-            padding: 4px 0;
-            vertical-align: top;
-            font-size: 11pt;
         }
 
         .info-label {
+            display: table-cell;
             width: 20%;
             font-weight: bold;
+            color: #404040;
+            padding-right: 10px;
         }
 
         .info-value {
+            display: table-cell;
             width: 80%;
+            color: #262626;
         }
 
         /* Items Table */
         .items-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
-            margin-bottom: 20px;
+            margin-top: 15px;
+            margin-bottom: 25px;
         }
 
         .items-table th, .items-table td {
-            border: 1px solid #000;
-            padding: 6px;
+            border: 1px solid #d4d4d4;
+            padding: 8px;
             font-size: 10pt;
         }
 
         .items-table th {
-            background: #f2f2f2;
+            background: #f97316;
+            color: white;
             text-align: center;
             font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .items-table tbody tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        .items-table tfoot tr {
+            background-color: #fff4ed;
+            font-weight: bold;
+            font-size: 11pt;
+        }
+
+        .items-table tfoot td {
+            border-top: 2px solid #f97316;
         }
 
         .right { text-align: right; }
         .center { text-align: center; }
 
-        /* Bank / Receiver Info */
-        .receiver-box {
-            width: 100%;
-            border: 1px solid #000;
-            padding: 10px;
-            margin-top: 10px;
-            margin-bottom: 20px;
-            font-size: 11pt;
-        }
-
-        .receiver-title {
-            font-weight: bold;
-            font-size: 12pt;
-            margin-bottom: 8px;
-            text-decoration: underline;
-        }
-
         /* Signature Section */
         .signatures {
             width: 100%;
-            margin-top: 40px;
+            margin-top: 50px;
+            page-break-inside: avoid;
         }
 
-        .signatures td {
-            width: 50%;
+        .signature-box {
+            display: inline-block;
+            width: 48%;
             text-align: center;
-            padding: 20px 10px;
-            font-size: 11pt;
+            vertical-align: top;
+            padding: 15px;
+        }
+
+        .signature-left {
+            float: left;
+        }
+
+        .signature-right {
+            float: right;
+        }
+
+        .signature-title {
+            font-weight: bold;
+            font-size: 12pt;
+            margin-bottom: 60px;
+            color: #404040;
+        }
+
+        .signature-image {
+            margin: 20px auto;
+            max-height: 80px;
+            max-width: 200px;
         }
 
         .signature-line {
-            margin-top: 60px;
-            border-top: 1px solid #000;
+            border-top: 2px solid #000;
             width: 80%;
-            margin-left: auto;
-            margin-right: auto;
-            padding-top: 3px;
+            margin: 0 auto;
+            padding-top: 5px;
+            font-weight: bold;
+            color: #262626;
         }
 
+        .signature-date {
+            font-size: 9pt;
+            color: #737373;
+            margin-top: 5px;
+        }
+
+        /* Footer */
         .footer {
-            margin-top: 30px;
+            margin-top: 40px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e5e5;
             text-align: center;
             font-size: 9pt;
-            color: #777;
+            color: #737373;
         }
 
+        /* Status Badge */
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 10pt;
+        }
+
+        .status-approved {
+            background-color: #22c55e;
+            color: white;
+        }
+
+        .status-paid {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .status-pending {
+            background-color: #f59e0b;
+            color: white;
+        }
+
+        /* Clear float */
+        .clearfix::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
     </style>
 </head>
 <body>
@@ -136,42 +212,57 @@
 
     <!-- Logo + Title -->
     <div class="header">
-        <img src="/sushi-mentai-logo.png" alt="Logo">
+        <img src="{{ public_path('sushi-mentai-logo.png') }}" alt="Sushi Mentai Logo">
+        <div class="title">PURCHASE REQUISITION</div>
     </div>
 
-    <div class="title">PURCHASE REQUISITION</div>
+    <!-- PR Status (if approved/paid) -->
+    @if($pr->isApproved() || $pr->isPaid())
+    <div style="text-align: center; margin-bottom: 15px;">
+        <span class="status-badge {{ $pr->isPaid() ? 'status-paid' : 'status-approved' }}">
+            {{ $pr->isPaid() ? 'PAID' : 'APPROVED' }}
+        </span>
+    </div>
+    @endif
 
     <!-- Info Section -->
-    <table class="info-table">
-        <tr>
-            <td class="info-label">Kepada</td>
-            <td class="info-value">
-                Head Office<br>
+    <div class="info-section">
+        <div class="info-row">
+            <div class="info-label">Kepada</div>
+            <div class="info-value">
+                <strong>Head Office</strong><br>
                 Ruko Darwin Barat No.3, Gading Serpong Kel. Medang<br>
                 Kec. Pagedangan Kabupaten Tanggerang, Banten 15334
-            </td>
-        </tr>
+            </div>
+        </div>
 
-        <tr>
-            <td class="info-label">Tanggal</td>
-            <td class="info-value">{{ $pr->tanggal->format('d/m/Y') }}</td>
-        </tr>
+        <div class="info-row">
+            <div class="info-label">PR Number</div>
+            <div class="info-value"><strong>{{ $pr->pr_number }}</strong></div>
+        </div>
 
-        <tr>
-            <td class="info-label">Perihal</td>
-            <td class="info-value">{{ $pr->perihal }}</td>
-        </tr>
+        <div class="info-row">
+            <div class="info-label">Tanggal</div>
+            <div class="info-value">{{ $pr->tanggal->format('d/m/Y') }}</div>
+        </div>
 
-        <tr>
-            <td class="info-label">Alasan</td>
-            <td class="info-value">{{ $pr->alasan ?? '-' }}</td>
-        </tr>
+        <div class="info-row">
+            <div class="info-label">Perihal</div>
+            <div class="info-value"><strong>{{ $pr->perihal }}</strong></div>
+        </div>
 
-        <tr>
-            <td class="info-label">Outlet</td>
-            <td class="info-value">{{ $pr->outlet->name }}</td>
-        </tr>
-    </table>
+        @if($pr->alasan)
+        <div class="info-row">
+            <div class="info-label">Alasan</div>
+            <div class="info-value">{{ $pr->alasan }}</div>
+        </div>
+        @endif
+
+        <div class="info-row">
+            <div class="info-label">Outlet</div>
+            <div class="info-value"><strong>{{ $pr->outlet->name }}</strong></div>
+        </div>
+    </div>
 
     <!-- Items Table -->
     <table class="items-table">
@@ -193,52 +284,127 @@
                 <td class="center">{{ $item->jumlah }}</td>
                 <td>{{ $item->nama_item }}</td>
                 <td class="center">{{ $item->satuan }}</td>
-                <td class="right">{{ number_format($item->harga,0,',','.') }}</td>
-                <td class="right">{{ number_format($item->subtotal,0,',','.') }}</td>
+                <td class="right">{{ number_format($item->harga, 0, ',', '.') }}</td>
+                <td class="right">{{ number_format($item->subtotal, 0, ',', '.') }}</td>
             </tr>
         @endforeach
+
+        @php
+            // Fill empty rows to make table look consistent (optional)
+            $emptyRows = max(0, 6 - $pr->items->count());
+        @endphp
+
+        @for($i = 0; $i < $emptyRows; $i++)
+            <tr>
+                <td class="center">{{ $pr->items->count() + $i + 1 }}</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+            </tr>
+        @endfor
         </tbody>
 
         <tfoot>
         <tr>
-            <td colspan="5" class="right"><strong>TOTAL</strong></td>
-            <td class="right"><strong>{{ number_format($pr->total,0,',','.') }}</strong></td>
+            <td colspan="5" class="right">TOTAL</td>
+            <td class="right">Rp {{ number_format($pr->total, 0, ',', '.') }}</td>
         </tr>
         </tfoot>
     </table>
 
-    <!-- Bank / Receiver Info -->
-    <div class="receiver-box">
-        <div class="receiver-title">Penerima</div>
+    <!-- Payment Info (if paid) -->
+    @if($pr->isPaid() && $pr->payment_date)
+    <div class="info-section" style="background-color: #f0f9ff; border-left-color: #3b82f6;">
+        <div style="font-weight: bold; font-size: 12pt; margin-bottom: 10px; color: #3b82f6;">
+            INFORMASI PEMBAYARAN
+        </div>
+        
+        <div class="info-row">
+            <div class="info-label">Tanggal Transfer</div>
+            <div class="info-value">{{ $pr->payment_date->format('d/m/Y') }}</div>
+        </div>
 
-        <table style="width:100%; font-size:11pt;">
-            <tr><td style="width:25%;">Nama</td><td>{{ $pr->receiver_name ?? '-' }}</td></tr>
-            <tr><td>Bank</td><td>{{ $pr->receiver_bank ?? '-' }}</td></tr>
-            <tr><td>No. Rekening</td><td>{{ $pr->receiver_account ?? '-' }}</td></tr>
-            <tr><td>Phone</td><td>{{ $pr->receiver_phone ?? '-' }}</td></tr>
-        </table>
+        <div class="info-row">
+            <div class="info-label">Jumlah</div>
+            <div class="info-value"><strong>Rp {{ number_format($pr->payment_amount, 0, ',', '.') }}</strong></div>
+        </div>
+
+        <div class="info-row">
+            <div class="info-label">Bank</div>
+            <div class="info-value">{{ $pr->payment_bank }}</div>
+        </div>
+
+        <div class="info-row">
+            <div class="info-label">No. Rekening</div>
+            <div class="info-value">{{ $pr->payment_account_number }}</div>
+        </div>
+
+        <div class="info-row">
+            <div class="info-label">Nama Penerima</div>
+            <div class="info-value">{{ $pr->payment_account_name }}</div>
+        </div>
     </div>
+    @endif
 
     <!-- Signatures -->
-    <table class="signatures">
-        <tr>
-            <td>
-                Pemohon:<br>
-                <div class="signature-line">{{ $pr->creator->name }}</div>
-            </td>
+    <div class="signatures clearfix">
+        <!-- Staff/Creator Signature -->
+        <div class="signature-box signature-left">
+            <div class="signature-title">Pemohon</div>
+            <div style="min-height: 60px;">
+                <!-- Staff tidak perlu signature image, hanya nama -->
+            </div>
+            <div class="signature-line">
+                {{ $pr->creator->name }}
+            </div>
+            <div class="signature-date">
+                {{ $pr->created_at->format('d/m/Y') }}
+            </div>
+        </div>
 
-            <td>
-                Menyetujui:<br>
-                <div class="signature-line">
-                    {{ $pr->approver->name ?? '(.....................................)' }}
+        <!-- Manager Signature -->
+        <div class="signature-box signature-right">
+            <div class="signature-title">Menyetujui</div>
+            
+            @if($pr->hasSignature())
+                <!-- Display actual signature image -->
+                <div style="min-height: 80px; margin: 10px 0;">
+                    <img src="{{ public_path(str_replace('public/', 'storage/', $pr->manager_signature_path)) }}" 
+                         alt="Manager Signature" 
+                         class="signature-image">
                 </div>
-            </td>
-        </tr>
-    </table>
+                <div class="signature-line">
+                    {{ $pr->approver->name }}
+                </div>
+                <div class="signature-date">
+                    {{ $pr->approved_at->format('d/m/Y') }}
+                </div>
+            @else
+                <!-- Placeholder if not signed yet -->
+                <div style="min-height: 60px;">
+                    <!-- Empty space for manual signature -->
+                </div>
+                <div class="signature-line">
+                    ( .................................. )
+                </div>
+                <div class="signature-date">
+                    Tanggal: _______________
+                </div>
+            @endif
+        </div>
+    </div>
 
     <!-- Footer -->
     <div class="footer">
-        Dicetak pada: {{ now()->format('d M Y, H:i') }} — Dokumen otomatis dari sistem PR Generator.
+        <div>
+            <strong>Sushi Mentai</strong> - Japanese Restaurant<br>
+            Dokumen ini dihasilkan secara otomatis oleh sistem PR Generator
+        </div>
+        <div style="margin-top: 8px;">
+            Dicetak pada: {{ now()->format('d M Y, H:i') }} WIB
+        </div>
     </div>
 
 </div>

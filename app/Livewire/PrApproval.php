@@ -4,13 +4,14 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\WithFileUploads;
 use App\Models\PurchaseRequisition;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class PrApproval extends Component
 {
-    use WithPagination;
+    use WithPagination, WithFileUploads;
 
     public $search = '';
     public $outletFilter = '';
@@ -21,6 +22,11 @@ class PrApproval extends Component
     // Bulk selection
     public $selectedPrs = [];
     public $selectAll = false;
+
+    // Approval Modal
+    public $showApproveModal = false;
+    public $approvingPrId = null;
+    public $managerSignature;
 
     // Rejection modal
     public $showRejectModal = false;
@@ -62,7 +68,7 @@ class PrApproval extends Component
 
     private function getPendingPrs()
     {
-        return PurchaseRequisition::with(['outlet', 'creator'])
+        return PurchaseRequisition::with(['outlet', 'creator', 'invoices'])
             ->where('status', 'submitted')
             ->when($this->search, function ($q) {
                 $q->where(function ($query) {
@@ -83,7 +89,10 @@ class PrApproval extends Component
             ->get();
     }
 
-    public function approvePr($id)
+    /**
+     * SINGLE APPROVE
+     */
+    public function openApproveModal($id)
     {
         $pr = PurchaseRequisition::findOrFail($id);
 
@@ -100,25 +109,57 @@ class PrApproval extends Component
         }
 
         // Must be submitted status
-        if ($pr->status !== 'submitted') {
+        if (!$pr->isSubmitted()) {
             session()->flash('error', 'Hanya PR dengan status submitted yang dapat diapprove');
             return;
         }
+
+        $this->approvingPrId = $id;
+        $this->managerSignature = null;
+        $this->showApproveModal = true;
+    }
+
+    public function closeApproveModal()
+    {
+        $this->showApproveModal = false;
+        $this->approvingPrId = null;
+        $this->managerSignature = null;
+    }
+
+    public function approvePr()
+    {
+        $this->validate([
+            'managerSignature' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+        ], [
+            'managerSignature.required' => 'Signature harus di-upload',
+            'managerSignature.image' => 'File harus berupa gambar',
+            'managerSignature.max' => 'Ukuran file maksimal 2MB',
+        ]);
+
+        $pr = PurchaseRequisition::findOrFail($this->approvingPrId);
+
+        // Store signature
+        $signaturePath = $this->managerSignature->store('public/signatures');
 
         $pr->update([
             'status' => 'approved',
             'approved_by' => Auth::id(),
             'approved_at' => now(),
+            'manager_signature_path' => $signaturePath,
         ]);
 
         activity()
             ->causedBy(Auth::user())
             ->performedOn($pr)
-            ->log('PR approved');
+            ->log('PR approved with signature');
 
         session()->flash('success', "PR {$pr->pr_number} berhasil disetujui");
+        $this->closeApproveModal();
     }
 
+    /**
+     * REJECT PR
+     */
     public function openRejectModal($id)
     {
         $pr = PurchaseRequisition::findOrFail($id);
@@ -160,7 +201,7 @@ class PrApproval extends Component
         $pr = PurchaseRequisition::findOrFail($this->rejectingPrId);
 
         // Must be submitted status
-        if ($pr->status !== 'submitted') {
+        if (!$pr->isSubmitted()) {
             session()->flash('error', 'Hanya PR dengan status submitted yang dapat direject');
             $this->closeRejectModal();
             return;
@@ -182,6 +223,10 @@ class PrApproval extends Component
         $this->closeRejectModal();
     }
 
+    /**
+     * BULK APPROVE (Without signature - quick approve)
+     * Note: Untuk production, mungkin perlu requirement signature untuk bulk juga
+     */
     public function bulkApprove()
     {
         if (empty($this->selectedPrs)) {
@@ -189,6 +234,9 @@ class PrApproval extends Component
             return;
         }
 
+        // For bulk approve, we'll skip signature requirement for now
+        // In production, you might want to require one signature for all
+        
         DB::transaction(function () {
             $prs = PurchaseRequisition::whereIn('id', $this->selectedPrs)
                 ->where('status', 'submitted')
@@ -200,23 +248,24 @@ class PrApproval extends Component
                     'status' => 'approved',
                     'approved_by' => Auth::id(),
                     'approved_at' => now(),
+                    // Note: No signature for bulk approve
                 ]);
 
                 activity()
                     ->causedBy(Auth::user())
                     ->performedOn($pr)
-                    ->log('PR bulk approved');
+                    ->log('PR bulk approved (no signature)');
             }
         });
 
-        session()->flash('success', count($this->selectedPrs) . ' PR berhasil disetujui');
+        session()->flash('success', count($this->selectedPrs) . ' PR berhasil disetujui (tanpa signature)');
         $this->selectedPrs = [];
         $this->selectAll = false;
     }
 
     public function render()
     {
-        $pendingPrs = PurchaseRequisition::with(['outlet', 'creator'])
+        $pendingPrs = PurchaseRequisition::with(['outlet', 'creator', 'invoices'])
             ->where('status', 'submitted')
             ->when($this->search, function ($q) {
                 $q->where(function ($query) {

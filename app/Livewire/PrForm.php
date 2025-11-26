@@ -3,14 +3,19 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use App\Models\PurchaseRequisition;
 use App\Models\PrItem;
+use App\Models\PrInvoice;
 use App\Models\Outlet;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class PrForm extends Component
 {
+    use WithFileUploads;
+
     public $prId;
     public $tanggal;
     public $perihal;
@@ -20,6 +25,10 @@ class PrForm extends Component
     
     public $items = [];
     public $total = 0;
+    
+    // NEW: Invoice uploads
+    public $invoices = [];
+    public $existingInvoices = [];
     
     public $outlets = [];
     public $isEdit = false;
@@ -33,6 +42,7 @@ class PrForm extends Component
         'items.*.jumlah' => 'required|integer|min:1',
         'items.*.satuan' => 'required|string|max:50',
         'items.*.harga' => 'required|numeric|min:0',
+        'invoices.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120', // 5MB
     ];
 
     protected $messages = [
@@ -45,6 +55,8 @@ class PrForm extends Component
         'items.*.satuan.required' => 'Satuan harus diisi',
         'items.*.harga.required' => 'Harga harus diisi',
         'items.*.harga.min' => 'Harga tidak boleh negatif',
+        'invoices.*.mimes' => 'Invoice harus berupa JPG, PNG, atau PDF',
+        'invoices.*.max' => 'Ukuran invoice maksimal 5MB',
     ];
 
     public function mount($id = null)
@@ -63,7 +75,7 @@ class PrForm extends Component
 
     public function loadPurchaseRequisition($id)
     {
-        $pr = PurchaseRequisition::with('items')->findOrFail($id);
+        $pr = PurchaseRequisition::with(['items', 'invoices'])->findOrFail($id);
 
         // Check authorization
         if (!Auth::user()->can('pr.edit') && $pr->created_by !== Auth::id()) {
@@ -71,7 +83,7 @@ class PrForm extends Component
         }
 
         // Can't edit if not draft
-        if ($pr->status !== 'draft') {
+        if (!$pr->isDraft()) {
             abort(403, 'Hanya PR dengan status draft yang dapat diedit');
         }
 
@@ -91,6 +103,9 @@ class PrForm extends Component
                 'subtotal' => $item->subtotal,
             ];
         })->toArray();
+
+        // Load existing invoices
+        $this->existingInvoices = $pr->invoices->toArray();
 
         $this->calculateTotal();
     }
@@ -139,6 +154,26 @@ class PrForm extends Component
         }, 0);
     }
 
+    public function removeExistingInvoice($invoiceId)
+    {
+        $invoice = PrInvoice::find($invoiceId);
+        
+        if ($invoice && $invoice->purchase_requisition_id == $this->prId) {
+            // Delete file from storage
+            if (Storage::exists($invoice->file_path)) {
+                Storage::delete($invoice->file_path);
+            }
+            
+            // Delete record
+            $invoice->delete();
+            
+            // Reload existing invoices
+            $this->existingInvoices = PrInvoice::where('purchase_requisition_id', $this->prId)->get()->toArray();
+            
+            session()->flash('success', 'Invoice berhasil dihapus');
+        }
+    }
+
     public function saveDraft()
     {
         $this->status = 'draft';
@@ -154,6 +189,12 @@ class PrForm extends Component
     public function save()
     {
         $this->validate();
+
+        // Validate at least one invoice uploaded
+        if (empty($this->invoices) && empty($this->existingInvoices)) {
+            $this->addError('invoices', 'Minimal 1 invoice harus di-upload');
+            return;
+        }
 
         DB::transaction(function () {
             if ($this->isEdit) {
@@ -194,6 +235,22 @@ class PrForm extends Component
                     'harga' => $item['harga'],
                     'subtotal' => $item['subtotal'],
                 ]);
+            }
+
+            // Upload new invoices
+            if (!empty($this->invoices)) {
+                foreach ($this->invoices as $invoice) {
+                    $path = $invoice->store('public/invoices');
+                    
+                    PrInvoice::create([
+                        'purchase_requisition_id' => $pr->id,
+                        'file_name' => $invoice->getClientOriginalName(),
+                        'file_path' => $path,
+                        'file_type' => $invoice->getMimeType(),
+                        'file_size' => $invoice->getSize(),
+                        'uploaded_by' => Auth::id(),
+                    ]);
+                }
             }
 
             // Log activity

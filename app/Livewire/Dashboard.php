@@ -7,11 +7,10 @@ use App\Models\PurchaseRequisition;
 use App\Models\Outlet;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class Dashboard extends Component
 {
-    public $dateRange = 'this_month'; // this_week, this_month, last_month, custom
+    public $dateRange = 'this_month';
     public $startDate;
     public $endDate;
     public $selectedOutlet = '';
@@ -84,8 +83,10 @@ class Dashboard extends Component
         $totalPRs = $query->count();
         $totalAmount = $query->sum('total');
 
-        $pendingCount = (clone $query)->where('status', 'submitted')->count();
+        // Status counts
+        $submittedCount = (clone $query)->where('status', 'submitted')->count();
         $approvedCount = (clone $query)->where('status', 'approved')->count();
+        $paidCount = (clone $query)->where('status', 'paid')->count();
         $rejectedCount = (clone $query)->where('status', 'rejected')->count();
         $draftCount = (clone $query)->where('status', 'draft')->count();
 
@@ -106,13 +107,17 @@ class Dashboard extends Component
         return [
             'total_prs' => $totalPRs,
             'total_amount' => $totalAmount,
-            'pending' => $pendingCount,
+            'submitted' => $submittedCount,
             'approved' => $approvedCount,
+            'paid' => $paidCount,
             'rejected' => $rejectedCount,
             'draft' => $draftCount,
             'percentage_change' => $percentageChange,
             'approved_today' => PurchaseRequisition::where('status', 'approved')
                 ->whereDate('approved_at', today())
+                ->count(),
+            'paid_today' => PurchaseRequisition::where('status', 'paid')
+                ->whereDate('payment_uploaded_at', today())
                 ->count(),
         ];
     }
@@ -120,7 +125,7 @@ class Dashboard extends Component
     public function getRecentPRsProperty()
     {
         return $this->getBaseQuery()
-            ->with(['outlet', 'creator', 'approver'])
+            ->with(['outlet', 'creator', 'approver', 'invoices'])
             ->latest()
             ->limit(5)
             ->get();
@@ -143,8 +148,9 @@ class Dashboard extends Component
                 'month' => $date->format('M'),
                 'total' => $query->count(),
                 'approved' => (clone $query)->where('status', 'approved')->count(),
+                'paid' => (clone $query)->where('status', 'paid')->count(),
                 'rejected' => (clone $query)->where('status', 'rejected')->count(),
-                'pending' => (clone $query)->where('status', 'submitted')->count(),
+                'submitted' => (clone $query)->where('status', 'submitted')->count(),
             ];
         }
 
@@ -174,6 +180,7 @@ class Dashboard extends Component
             'draft' => $query->clone()->where('status', 'draft')->count(),
             'submitted' => $query->clone()->where('status', 'submitted')->count(),
             'approved' => $query->clone()->where('status', 'approved')->count(),
+            'paid' => $query->clone()->where('status', 'paid')->count(),
             'rejected' => $query->clone()->where('status', 'rejected')->count(),
         ];
     }
@@ -184,7 +191,7 @@ class Dashboard extends Component
             return collect();
         }
 
-        return PurchaseRequisition::with(['outlet', 'creator'])
+        return PurchaseRequisition::with(['outlet', 'creator', 'invoices'])
             ->where('status', 'submitted')
             ->where('created_by', '!=', Auth::id())
             ->latest()

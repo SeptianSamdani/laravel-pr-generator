@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\PrPdfController;
+use App\Http\Controllers\PrManagementController;
 use App\Livewire\Dashboard;
 use App\Livewire\PrForm;
 use App\Livewire\PrList;
@@ -34,8 +35,7 @@ Route::middleware('auth')->group(function () {
         return redirect()->route('dashboard');
     });
     
-    Route::get('/dashboard', Dashboard::class
-    )->name('dashboard');
+    Route::get('/dashboard', Dashboard::class)->name('dashboard');
 
     /*
     |--------------------------------------------------------------------------
@@ -74,6 +74,53 @@ Route::middleware('auth')->group(function () {
             ->middleware('permission:pr.download')
             ->name('preview');
 
+        /*
+        |--------------------------------------------------------------------------
+        | Invoice Management (Staff)
+        |--------------------------------------------------------------------------
+        */
+        Route::middleware('permission:pr.create')->group(function () {
+            // Upload invoice(s) untuk PR
+            Route::post('/{id}/invoice/upload', [PrManagementController::class, 'uploadInvoice'])
+                ->name('invoice.upload');
+            
+            // Delete invoice
+            Route::delete('/invoice/{invoiceId}', [PrManagementController::class, 'deleteInvoice'])
+                ->name('invoice.delete');
+            
+            // Download invoice
+            Route::get('/invoice/{invoiceId}/download', [PrManagementController::class, 'downloadInvoice'])
+                ->name('invoice.download');
+        });
+
+        /*
+        |--------------------------------------------------------------------------
+        | Manager Actions (Approval & Payment)
+        |--------------------------------------------------------------------------
+        */
+        Route::middleware('permission:pr.approve')->group(function () {
+            // Approve PR + Upload Signature
+            Route::post('/{id}/approve', [PrManagementController::class, 'approveWithSignature'])
+                ->name('approve');
+            
+            // Reject PR
+            Route::post('/{id}/reject', [PrManagementController::class, 'rejectPr'])
+                ->name('reject');
+            
+            // Upload Payment Proof + Details
+            Route::post('/{id}/payment', [PrManagementController::class, 'uploadPaymentProof'])
+                ->name('payment.upload');
+            
+            // Download Manager Signature
+            Route::get('/{id}/download/signature', [PrManagementController::class, 'downloadFile'])
+                ->defaults('type', 'signature')
+                ->name('download.signature');
+            
+            // Download Payment Proof
+            Route::get('/{id}/download/payment-proof', [PrManagementController::class, 'downloadFile'])
+                ->defaults('type', 'payment-proof')
+                ->name('download.payment');
+        });
     });
 
     /*

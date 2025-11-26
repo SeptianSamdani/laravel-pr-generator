@@ -60,7 +60,7 @@ class PrList extends Component
         }
 
         // Can only delete draft
-        if ($pr->status !== 'draft') {
+        if (!$pr->isDraft()) {
             session()->flash('error', 'Hanya PR dengan status draft yang dapat dihapus');
             return;
         }
@@ -77,7 +77,7 @@ class PrList extends Component
 
     public function render()
     {
-        $query = PurchaseRequisition::with(['outlet', 'creator'])
+        $query = PurchaseRequisition::with(['outlet', 'creator', 'approver', 'invoices'])
             ->when($this->search, function ($q) {
                 $q->where(function ($query) {
                     $query->where('pr_number', 'like', '%' . $this->search . '%')

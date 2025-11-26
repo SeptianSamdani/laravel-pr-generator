@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\PurchaseRequisition;
 use App\Services\PdfGeneratorService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class PrPdfController extends Controller
@@ -21,8 +20,13 @@ class PrPdfController extends Controller
      */
     public function download($id)
     {
-        $pr = PurchaseRequisition::with(['items', 'outlet', 'creator', 'approver'])
-            ->findOrFail($id);
+        $pr = PurchaseRequisition::with([
+            'items', 
+            'outlet', 
+            'creator', 
+            'approver',
+            'invoices'
+        ])->findOrFail($id);
 
         // Authorization check
         $this->authorize($pr);
@@ -41,8 +45,13 @@ class PrPdfController extends Controller
      */
     public function preview($id)
     {
-        $pr = PurchaseRequisition::with(['items', 'outlet', 'creator', 'approver'])
-            ->findOrFail($id);
+        $pr = PurchaseRequisition::with([
+            'items', 
+            'outlet', 
+            'creator', 
+            'approver',
+            'invoices'
+        ])->findOrFail($id);
 
         // Authorization check
         $this->authorize($pr);
