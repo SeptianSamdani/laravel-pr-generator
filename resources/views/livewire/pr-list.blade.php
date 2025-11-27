@@ -1,113 +1,137 @@
 <div>
-    <!-- Flash Messages -->
-    @if (session()->has('success'))
-        <div class="alert-success mb-6">
-            <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+    {{-- Flash Messages --}}
+    @if (session('success'))
+        <div class="flex items-center gap-3 p-3 border border-green-200 bg-green-50 rounded-lg shadow-soft mb-6">
+            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M5 13l4 4L19 7" />
             </svg>
-            <p>{{ session('success') }}</p>
+            <span class="text-sm font-medium text-green-700">
+                {{ session('success') }}
+            </span>
         </div>
     @endif
 
-    @if (session()->has('error'))
-        <div class="alert-danger mb-6">
-            <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+    @if (session('error'))
+        <div class="flex items-center gap-3 p-3 border border-red-200 bg-red-50 rounded-lg shadow-soft mb-6">
+            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M6 18L18 6M6 6l12 12" />
             </svg>
-            <p>{{ session('error') }}</p>
+            <span class="text-sm font-medium text-red-700">
+                {{ session('error') }}
+            </span>
         </div>
     @endif
+
 
     <div class="space-y-6">
-        <!-- Header Actions -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        {{-- Headers --}}
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
             <div>
-                <h3 class="text-lg font-bold text-secondary-900">Daftar Purchase Requisition</h3>
-                <p class="text-sm text-secondary-600">Total: {{ $purchaseRequisitions->total() }} PR</p>
+                <h3 class="text-lg font-semibold text-secondary-900">Purchase Requisition</h3>
+                <p class="text-sm text-secondary-600">
+                    Total: {{ $purchaseRequisitions->total() }} records
+                </p>
             </div>
+
             @can('pr.create')
-                <a href="{{ route('pr.create') }}" class="btn-primary">
+                <a href="{{ route('pr.create') }}"
+                class="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-500 text-white text-sm hover:bg-primary-600 transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
-                    Create New PR
+                    New PR
                 </a>
             @endcan
         </div>
 
         <!-- Filters -->
-        <div class="card">
-            <div class="card-body">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                    <!-- Search -->
-                    <div>
-                        <label class="block text-sm font-semibold text-secondary-900 mb-2">Search</label>
-                        <input 
-                            type="text" 
-                            wire:model.live.debounce.300ms="search"
-                            class="input"
-                            placeholder="PR number, perihal..."
-                        >
-                    </div>
+        <div class="rounded-xl border border-secondary-200 bg-white shadow-soft p-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
 
-                    <!-- Status Filter -->
-                    <div>
-                        <label class="block text-sm font-semibold text-secondary-900 mb-2">Status</label>
-                        <select wire:model.live="statusFilter" class="input">
-                            <option value="">Semua Status</option>
-                            <option value="draft">Draft</option>
-                            <option value="submitted">Submitted</option>
-                            <option value="approved">Approved</option>
-                            <option value="rejected">Rejected</option>
-                        </select>
-                    </div>
-
-                    <!-- Outlet Filter -->
-                    <div>
-                        <label class="block text-sm font-semibold text-secondary-900 mb-2">Outlet</label>
-                        <select wire:model.live="outletFilter" class="input">
-                            <option value="">Semua Outlet</option>
-                            @foreach($outlets as $outlet)
-                                <option value="{{ $outlet->id }}">{{ $outlet->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Date From -->
-                    <div>
-                        <label class="block text-sm font-semibold text-secondary-900 mb-2">Dari Tanggal</label>
-                        <input 
-                            type="date" 
-                            wire:model.live="dateFrom"
-                            class="input"
-                        >
-                    </div>
-
-                    <!-- Date To -->
-                    <div>
-                        <label class="block text-sm font-semibold text-secondary-900 mb-2">Sampai Tanggal</label>
-                        <input 
-                            type="date" 
-                            wire:model.live="dateTo"
-                            class="input"
-                        >
-                    </div>
+                {{-- Search --}}
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-medium text-secondary-700">Search</label>
+                    <input 
+                        type="text" 
+                        wire:model.live.debounce.300ms="search"
+                        class="input bg-white border-secondary-200 focus:border-primary-400"
+                        placeholder="PR number, perihal..."
+                    >
                 </div>
 
-                <div class="mt-4 flex justify-end">
-                    <button wire:click="resetFilters" class="btn-ghost text-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                        </svg>
-                        Reset Filter
-                    </button>
+                {{-- Status --}}
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-medium text-secondary-700">Status</label>
+                    <select wire:model.live="statusFilter" 
+                        class="input bg-white border-secondary-200 focus:border-primary-400">
+                        <option value="">All Status</option>
+                        <option value="draft">Draft</option>
+                        <option value="submitted">Submitted</option>
+                        <option value="approved">Approved</option>
+                        <option value="paid">Paid</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
                 </div>
+
+                {{-- Outlet --}}
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-medium text-secondary-700">Outlet</label>
+                    <select wire:model.live="outletFilter" 
+                        class="input bg-white border-secondary-200 focus:border-primary-400">
+                        <option value="">All Outlets</option>
+                        @foreach($outlets as $outlet)
+                            <option value="{{ $outlet->id }}">{{ $outlet->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Date From --}}
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-medium text-secondary-700">From</label>
+                    <input type="date" 
+                        wire:model.live="dateFrom"
+                        class="input bg-white border-secondary-200 focus:border-primary-400">
+                </div>
+
+                {{-- Date To --}}
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-medium text-secondary-700">To</label>
+                    <input type="date" 
+                        wire:model.live="dateTo"
+                        class="input bg-white border-secondary-200 focus:border-primary-400">
+                </div>
+
+            </div>
+
+            {{-- Reset --}}
+            <div class="mt-4 flex justify-end">
+                <button wire:click="resetFilters"
+                    class="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg border border-secondary-200 
+                        text-secondary-700 hover:bg-secondary-100/50 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Reset
+                </button>
             </div>
         </div>
 
         <!-- Table -->
         <div class="card">
             <div class="card-body p-0">
+                <!-- Loading Indicator -->
+                <div wire:loading class="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
+                    <div class="flex items-center gap-2 text-primary-600">
+                        <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span class="font-semibold">Loading...</span>
+                    </div>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="table">
                         <thead>
@@ -141,6 +165,8 @@
                                             <span class="badge badge-warning">Submitted</span>
                                         @elseif($pr->status === 'approved')
                                             <span class="badge badge-success">Approved</span>
+                                        @elseif($pr->status === 'paid')
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-300">Paid</span>
                                         @elseif($pr->status === 'rejected')
                                             <span class="badge badge-danger">Rejected</span>
                                         @endif
@@ -148,6 +174,17 @@
                                     <td class="text-sm">{{ $pr->creator->name }}</td>
                                     <td>
                                         <div class="flex items-center gap-2">
+                                            <!-- View Detail (untuk semua status) -->
+                                            <a 
+                                                href="{{ route('pr.show', $pr->id) }}"
+                                                class="text-blue-600 hover:text-blue-800 p-1"
+                                                title="View Detail"
+                                            >
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                                </svg>
+                                            </a>
                                             <!-- Edit (only for draft) -->
                                             @if($pr->status === 'draft')
                                                 @can('pr.edit')

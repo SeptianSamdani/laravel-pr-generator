@@ -371,7 +371,7 @@
             @if($pr->hasSignature())
                 <!-- Display actual signature image -->
                 <div style="min-height: 80px; margin: 10px 0;">
-                    <img src="{{ public_path(str_replace('public/', 'storage/', $pr->manager_signature_path)) }}" 
+                    <img src="{{ storage_path('app/public/' . str_replace('signatures/', '', $pr->manager_signature_path)) }}" 
                          alt="Manager Signature" 
                          class="signature-image">
                 </div>

@@ -10,6 +10,7 @@ use App\Models\PrInvoice;
 use App\Models\Outlet;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class PrForm extends Component
@@ -33,17 +34,27 @@ class PrForm extends Component
     public $outlets = [];
     public $isEdit = false;
 
-    protected $rules = [
-        'tanggal' => 'required|date',
-        'perihal' => 'required|string|max:255',
-        'alasan' => 'nullable|string|max:500',
-        'outlet_id' => 'required|exists:outlets,id',
-        'items.*.nama_item' => 'required|string|max:255',
-        'items.*.jumlah' => 'required|integer|min:1',
-        'items.*.satuan' => 'required|string|max:50',
-        'items.*.harga' => 'required|numeric|min:0',
-        'invoices.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120', // 5MB
-    ];
+    protected function rules()
+    {
+        $rules = [
+            'tanggal' => 'required|date',
+            'perihal' => 'required|string|max:255',
+            'alasan' => 'nullable|string|max:500',
+            'outlet_id' => 'required|exists:outlets,id',
+            'items.*.nama_item' => 'required|string|max:255',
+            'items.*.jumlah' => 'required|integer|min:1',
+            'items.*.satuan' => 'required|string|max:50',
+            'items.*.harga' => 'required|numeric|min:0',
+        ];
+
+        // Validasi invoice hanya untuk submit (bukan draft)
+        if ($this->status === 'submitted') {
+            $rules['invoices'] = 'required|array|min:1|max:5';
+            $rules['invoices.*'] = 'required|file|mimes:jpg,jpeg,png,pdf|max:5120';
+        }
+
+        return $rules;
+    }
 
     protected $messages = [
         'tanggal.required' => 'Tanggal harus diisi',
@@ -154,26 +165,32 @@ class PrForm extends Component
         }, 0);
     }
 
-    public function removeExistingInvoice($invoiceId)
+   public function removeExistingInvoice($invoiceId)
     {
-        $invoice = PrInvoice::find($invoiceId);
-        
-        if ($invoice && $invoice->purchase_requisition_id == $this->prId) {
-            // Delete file from storage
-            if (Storage::exists($invoice->file_path)) {
-                Storage::delete($invoice->file_path);
+        try {
+            $invoice = PrInvoice::find($invoiceId);
+            
+            if ($invoice && $invoice->purchase_requisition_id == $this->prId) {
+                // Delete file from storage (gunakan disk 'public')
+                if (Storage::disk('public')->exists($invoice->file_path)) {
+                    Storage::disk('public')->delete($invoice->file_path);
+                }
+                
+                // Delete record
+                $invoice->delete();
+                
+                // Reload existing invoices
+                $this->existingInvoices = PrInvoice::where('purchase_requisition_id', $this->prId)->get()->toArray();
+                
+                session()->flash('success', 'Invoice berhasil dihapus');
+            } else {
+                session()->flash('error', 'Invoice tidak ditemukan');
             }
-            
-            // Delete record
-            $invoice->delete();
-            
-            // Reload existing invoices
-            $this->existingInvoices = PrInvoice::where('purchase_requisition_id', $this->prId)->get()->toArray();
-            
-            session()->flash('success', 'Invoice berhasil dihapus');
+        } catch (\Exception $e) {
+            Log::error('Delete invoice failed: ' . $e->getMessage());
+            session()->flash('error', 'Gagal menghapus invoice');
         }
     }
-
     public function saveDraft()
     {
         $this->status = 'draft';
@@ -188,83 +205,140 @@ class PrForm extends Component
 
     public function save()
     {
-        $this->validate();
-
-        // Validate at least one invoice uploaded
-        if (empty($this->invoices) && empty($this->existingInvoices)) {
-            $this->addError('invoices', 'Minimal 1 invoice harus di-upload');
-            return;
-        }
-
-        DB::transaction(function () {
-            if ($this->isEdit) {
-                $pr = PurchaseRequisition::findOrFail($this->prId);
-                $pr->update([
-                    'tanggal' => $this->tanggal,
-                    'perihal' => $this->perihal,
-                    'alasan' => $this->alasan,
-                    'outlet_id' => $this->outlet_id,
-                    'total' => $this->total,
-                    'status' => $this->status,
-                ]);
-            } else {
-                $pr = PurchaseRequisition::create([
-                    'tanggal' => $this->tanggal,
-                    'perihal' => $this->perihal,
-                    'alasan' => $this->alasan,
-                    'outlet_id' => $this->outlet_id,
-                    'total' => $this->total,
-                    'status' => $this->status,
-                    'created_by' => Auth::id(),
-                ]);
+        try {
+            // Validasi items minimal 1
+            if (count($this->items) < 1) {
+                session()->flash('error', 'Minimal 1 item harus diisi');
+                return;
             }
 
-            // Delete existing items if edit
-            if ($this->isEdit) {
-                $pr->items()->delete();
-            }
-
-            // Save items
-            foreach ($this->items as $index => $item) {
-                PrItem::create([
-                    'purchase_requisition_id' => $pr->id,
-                    'order' => $index + 1,
-                    'nama_item' => $item['nama_item'],
-                    'jumlah' => $item['jumlah'],
-                    'satuan' => $item['satuan'],
-                    'harga' => $item['harga'],
-                    'subtotal' => $item['subtotal'],
-                ]);
-            }
-
-            // Upload new invoices
-            if (!empty($this->invoices)) {
-                foreach ($this->invoices as $invoice) {
-                    $path = $invoice->store('public/invoices');
-                    
-                    PrInvoice::create([
-                        'purchase_requisition_id' => $pr->id,
-                        'file_name' => $invoice->getClientOriginalName(),
-                        'file_path' => $path,
-                        'file_type' => $invoice->getMimeType(),
-                        'file_size' => $invoice->getSize(),
-                        'uploaded_by' => Auth::id(),
-                    ]);
+            // Validasi invoice HANYA untuk submitted status
+            if ($this->status === 'submitted') {
+                if (empty($this->invoices) && empty($this->existingInvoices)) {
+                    $this->addError('invoices', 'Minimal 1 invoice harus di-upload sebelum submit untuk approval');
+                    return;
                 }
             }
 
-            // Log activity
-            activity()
-                ->causedBy(Auth::user())
-                ->performedOn($pr)
-                ->log($this->isEdit ? 'PR updated' : 'PR created');
+            // Validasi budget outlet (jika submit)
+            if ($this->status === 'submitted' && $this->outlet_id) {
+                $outlet = Outlet::find($this->outlet_id);
+                
+                // Hitung total PR yang sudah approved/paid bulan ini (exclude PR yang sedang diedit)
+                $usedBudget = PurchaseRequisition::where('outlet_id', $this->outlet_id)
+                    ->whereMonth('created_at', now()->month)
+                    ->whereYear('created_at', now()->year)
+                    ->whereIn('status', ['approved', 'paid'])
+                    ->when($this->isEdit, function($q) {
+                        return $q->where('id', '!=', $this->prId);
+                    })
+                    ->sum('total');
+                
+                $monthlyBudget = 50000000; // Rp 50M per outlet per bulan
+                $remainingBudget = $monthlyBudget - $usedBudget;
+                
+                if ($this->total > $remainingBudget) {
+                    session()->flash('error', 
+                        'Budget outlet tidak cukup! ' .
+                        'Sisa budget bulan ini: Rp ' . number_format($remainingBudget, 0, ',', '.') . ' ' .
+                        'Total PR: Rp ' . number_format($this->total, 0, ',', '.')
+                    );
+                    return;
+                }
+            }
+
+            $this->validate();
+
+            DB::transaction(function () {
+                if ($this->isEdit) {
+                    $pr = PurchaseRequisition::findOrFail($this->prId);
+                    $pr->update([
+                        'tanggal' => $this->tanggal,
+                        'perihal' => $this->perihal,
+                        'alasan' => $this->alasan,
+                        'outlet_id' => $this->outlet_id,
+                        'total' => $this->total,
+                        'status' => $this->status,
+                    ]);
+                } else {
+                    $pr = PurchaseRequisition::create([
+                        'tanggal' => $this->tanggal,
+                        'perihal' => $this->perihal,
+                        'alasan' => $this->alasan,
+                        'outlet_id' => $this->outlet_id,
+                        'total' => $this->total,
+                        'status' => $this->status,
+                        'created_by' => Auth::id(),
+                    ]);
+                }
+
+                // Delete existing items if edit
+                if ($this->isEdit) {
+                    $pr->items()->delete();
+                }
+
+                // Save items
+                foreach ($this->items as $index => $item) {
+                    PrItem::create([
+                        'purchase_requisition_id' => $pr->id,
+                        'order' => $index + 1,
+                        'nama_item' => $item['nama_item'],
+                        'jumlah' => $item['jumlah'],
+                        'satuan' => $item['satuan'],
+                        'harga' => $item['harga'],
+                        'subtotal' => $item['subtotal'],
+                    ]);
+                }
+
+                // Upload new invoices
+                if (!empty($this->invoices)) {
+                    // Validasi total size
+                    $totalSize = collect($this->invoices)->sum(fn($file) => $file->getSize());
+                    if ($totalSize > 26214400) { // 25MB
+                        throw new \Exception('Total ukuran file melebihi 25MB');
+                    }
+
+                    foreach ($this->invoices as $invoice) {
+                        $path = $invoice->store('invoices', 'public');
+                        
+                        PrInvoice::create([
+                            'purchase_requisition_id' => $pr->id,
+                            'file_name' => $invoice->getClientOriginalName(),
+                            'file_path' => $path,
+                            'file_type' => $invoice->getMimeType(),
+                            'file_size' => $invoice->getSize(),
+                            'uploaded_by' => Auth::id(),
+                        ]);
+                    }
+                }
+
+                // Log activity
+                activity()
+                    ->causedBy(Auth::user())
+                    ->performedOn($pr)
+                    ->withProperties([
+                        'pr_number' => $pr->pr_number,
+                        'total' => $pr->total,
+                        'status' => $pr->status,
+                    ])
+                    ->log($this->isEdit ? 'PR updated' : 'PR created');
+
+                $this->prId = $pr->id; // Save PR ID for redirect
+            });
 
             session()->flash('success', $this->status === 'submitted' 
                 ? 'PR berhasil disubmit untuk approval' 
                 : 'PR berhasil disimpan sebagai draft');
 
-            return redirect()->route('pr.show', $pr->id);
-        });
+            return redirect()->route('pr.show', $this->prId);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Validation errors akan otomatis ditampilkan
+            throw $e;
+        } catch (\Exception $e) {
+            Log::error('PR save failed: ' . $e->getMessage());
+            session()->flash('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 
     public function render()

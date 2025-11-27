@@ -1,12 +1,15 @@
 <div>
-    <!-- Filters Section -->
-    <div class="card mb-6 animate-fade-in">
-        <div class="card-body">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <!-- Date Range Filter -->
-                <div>
-                    <label class="block text-sm font-semibold text-secondary-900 mb-2">Period</label>
-                    <select wire:model.live="dateRange" class="input">
+    {{-- Filter Section --}}
+    <div class="card mb-6 bg-orange-light-50/60 border border-orange-light-200">
+        <div class="card-body space-y-4">
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+                {{-- Date Range --}}
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-medium text-secondary-700">Period</label>
+                    <select wire:model.live="dateRange"
+                        class="input bg-white border-secondary-200 focus:ring-primary-500/30">
                         <option value="today">Today</option>
                         <option value="this_week">This Week</option>
                         <option value="this_month">This Month</option>
@@ -17,124 +20,112 @@
                 </div>
 
                 @if($dateRange === 'custom')
-                <!-- Custom Date Range -->
-                <div>
-                    <label class="block text-sm font-semibold text-secondary-900 mb-2">Start Date</label>
-                    <input type="date" wire:model.live="startDate" class="input">
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-medium text-secondary-700">Start Date</label>
+                    <input type="date" wire:model.live="startDate"
+                        class="input bg-white border-secondary-200 focus:ring-primary-500/30">
                 </div>
-                <div>
-                    <label class="block text-sm font-semibold text-secondary-900 mb-2">End Date</label>
-                    <input type="date" wire:model.live="endDate" class="input">
+
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-medium text-secondary-700">End Date</label>
+                    <input type="date" wire:model.live="endDate"
+                        class="input bg-white border-secondary-200 focus:ring-primary-500/30">
                 </div>
                 @endif
 
-                <!-- Outlet Filter -->
-                <div>
-                    <label class="block text-sm font-semibold text-secondary-900 mb-2">Outlet</label>
-                    <select wire:model.live="selectedOutlet" class="input">
+                {{-- Outlet --}}
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-medium text-secondary-700">Outlet</label>
+                    <select wire:model.live="selectedOutlet"
+                        class="input bg-white border-secondary-200 focus:ring-primary-500/30">
                         <option value="">All Outlets</option>
                         @foreach($outlets as $outlet)
                             <option value="{{ $outlet->id }}">{{ $outlet->name }}</option>
                         @endforeach
                     </select>
                 </div>
+
             </div>
         </div>
     </div>
 
-    <!-- Stats Cards -->
+    {{-- Stats Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Total PRs -->
-        <div class="card animate-fade-in">
-            <div class="card-body">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-secondary-600">Total PRs</p>
-                        <h3 class="text-3xl font-bold text-secondary-900 mt-2">{{ number_format($stats['total_prs']) }}</h3>
-                        <p class="text-xs mt-2 flex items-center gap-1
-                            {{ $stats['percentage_change'] >= 0 ? 'text-green-600' : 'text-red-600' }}">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                @if($stats['percentage_change'] >= 0)
-                                    <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                                @else
-                                    <path fill-rule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                @endif
-                            </svg>
-                            {{ abs($stats['percentage_change']) }}% vs previous period
-                        </p>
-                    </div>
-                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-orange">
-                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Pending Approval -->
-        <div class="card animate-fade-in" style="animation-delay: 0.1s;">
-            <div class="card-body">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-secondary-600">Pending Approval</p>
-                        <h3 class="text-3xl font-bold text-secondary-900 mt-2">{{ number_format($stats['pending']) }}</h3>
-                        <p class="text-xs text-amber-600 mt-2 flex items-center gap-1">
-                            <div class="status-pending"></div>
-                            Awaiting approval
-                        </p>
-                    </div>
-                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-lg">
-                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-        </div>
+        @php 
+            $palette = [
+                'Total PRs'         => 'primary',
+                'Pending Approval'  => 'accent',
+                'Approved'          => 'green',
+                'Total Amount'      => 'secondary',
+            ];
+        @endphp
 
-        <!-- Approved -->
-        <div class="card animate-fade-in" style="animation-delay: 0.2s;">
-            <div class="card-body">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-secondary-600">Approved</p>
-                        <h3 class="text-3xl font-bold text-secondary-900 mt-2">{{ number_format($stats['approved']) }}</h3>
-                        <p class="text-xs text-green-600 mt-2 flex items-center gap-1">
-                            <div class="status-active"></div>
-                            {{ $stats['approved_today'] }} today
-                        </p>
-                    </div>
-                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg">
-                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-        </div>
+        @php 
+            $statCards = [
+                [
+                    'label' => 'Total PRs',
+                    'value' => number_format($stats['total_prs']),
+                    'sub'   => abs($stats['percentage_change']).'% vs previous',
+                    'icon'  => 'tabler:list',
+                ],
+                [
+                    'label' => 'Pending Approval',
+                    'value' => number_format($stats['pending']),
+                    'sub'   => 'Awaiting approval',
+                    'icon'  => 'tabler:clock',
+                ],
+                [
+                    'label' => 'Approved',
+                    'value' => number_format($stats['approved']),
+                    'sub'   => $stats['approved_today'].' today',
+                    'icon'  => 'tabler:check',
+                ],
+                [
+                    'label' => 'Total Amount',
+                    'value' => 'Rp '.number_format($stats['total_amount'] / 1_000_000, 1).'M',
+                    'sub'   => 'Selected period',
+                    'icon'  => 'tabler:credit-card',
+                ],
+            ];
+        @endphp
 
-        <!-- Total Amount -->
-        <div class="card animate-fade-in" style="animation-delay: 0.3s;">
-            <div class="card-body">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-secondary-600">Total Amount</p>
-                        <h3 class="text-2xl font-bold text-secondary-900 mt-2">
-                            Rp {{ number_format($stats['total_amount'] / 1000000, 1) }}M
-                        </h3>
-                        <p class="text-xs text-secondary-500 mt-2">Selected period</p>
-                    </div>
-                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-secondary-700 to-secondary-900 flex items-center justify-center shadow-lg">
-                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
+        @foreach ($statCards as $card)
+            @php
+                $color = $palette[$card['label']] ?? 'secondary';
+            @endphp
+
+            <div class="rounded-xl border border-secondary-100 shadow-soft p-5 flex flex-col gap-3
+                bg-{{ $color }}-50/40">
+
+                {{-- Icon background --}}
+                <div class="w-10 h-10 rounded-lg 
+                    bg-{{ $color }}-100
+                    text-{{ $color }}-700
+                    flex items-center justify-center">
+                    <x-icon :name="$card['icon']" class="w-5 h-5" />
                 </div>
+
+                {{-- Label --}}
+                <p class="text-sm font-medium text-secondary-600">
+                    {{ $card['label'] }}
+                </p>
+
+                {{-- Value --}}
+                <h3 class="text-2xl font-bold text-secondary-900">
+                    {{ $card['value'] }}
+                </h3>
+
+                {{-- Sub Text --}}
+                <p class="text-xs text-secondary-500">
+                    {{ $card['sub'] }}
+                </p>
+
             </div>
-        </div>
+        @endforeach
     </div>
 
+    {{-- Charts --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <!-- Monthly Chart -->
         <div class="lg:col-span-2 card animate-slide-in">

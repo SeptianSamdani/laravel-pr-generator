@@ -17,6 +17,7 @@ class PrDetail extends Component
     public $canEdit = false;
     public $canDelete = false;
     public $canApprove = false;
+    public $canUploadPayment = false; 
 
     // NEW: Approval & Payment
     public $showApproveModal = false;
@@ -73,6 +74,10 @@ class PrDetail extends Component
         $this->canApprove = $user->can('pr.approve')
             && $this->pr->isSubmitted()
             && $this->pr->created_by !== $user->id;
+
+        // NEW: Can upload payment if: manager role, status is approved
+        $this->canUploadPayment = $user->can('pr.approve')
+            && $this->pr->isApproved();
     }
 
     public function deletePr()
@@ -151,7 +156,7 @@ class PrDetail extends Component
         ]);
 
         // Store signature
-        $signaturePath = $this->managerSignature->store('public/signatures');
+       $signaturePath = $this->managerSignature->store('signatures', 'public');
 
         $this->pr->update([
             'status' => 'approved',
@@ -280,7 +285,7 @@ class PrDetail extends Component
         ]);
 
         // Store payment proof
-        $proofPath = $this->paymentProof->store('public/payment-proofs');
+        $proofPath = $this->paymentProof->store('payment-proofs', 'public');
 
         $this->pr->update([
             'status' => 'paid',

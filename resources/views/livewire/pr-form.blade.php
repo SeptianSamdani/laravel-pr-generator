@@ -91,6 +91,134 @@
                     </div>
                 </div>
 
+                <!-- Invoice Upload Section -->
+                <div class="card animate-fade-in" style="animation-delay: 0.05s;">
+                    <div class="card-header">
+                        <h3 class="text-primary-50 text-lg font-bold">Upload Invoice dari Talent</h3>
+                        <p class="text-xs text-primary-100 mt-1">Upload invoice yang diterima dari talent (max 5 files, 5MB each)</p>
+                    </div>
+                    <div class="card-body space-y-4">
+                        <!-- Existing Invoices (Edit Mode) -->
+                        @if($isEdit && !empty($existingInvoices))
+                            <div>
+                                <p class="text-sm font-semibold text-secondary-900 mb-2">Invoice yang sudah diupload:</p>
+                                <div class="grid grid-cols-1 gap-3">
+                                    @foreach($existingInvoices as $invoice)
+                                        <div class="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                                            <div class="flex items-center gap-3">
+                                                @if(str_contains($invoice['file_type'], 'image'))
+                                                    <div class="w-10 h-10 bg-primary-100 rounded flex items-center justify-center">
+                                                        <svg class="w-5 h-5 text-primary-600" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                    </div>
+                                                @else
+                                                    <div class="w-10 h-10 bg-red-100 rounded flex items-center justify-center">
+                                                        <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                    </div>
+                                                @endif
+                                                <div>
+                                                    <p class="text-sm font-semibold text-secondary-900">{{ $invoice['file_name'] }}</p>
+                                                    <p class="text-xs text-secondary-500">
+                                                        {{ number_format($invoice['file_size'] / 1024, 0) }} KB
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <button 
+                                                type="button"
+                                                wire:click="removeExistingInvoice({{ $invoice['id'] }})"
+                                                wire:confirm="Hapus invoice ini?"
+                                                class="text-red-600 hover:text-red-800 p-2"
+                                            >
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- Upload New Invoices -->
+                        <div>
+                            <label class="block text-sm font-semibold text-secondary-900 mb-2">
+                                Upload Invoice Baru 
+                                @if($status === 'submitted')
+                                    <span class="text-red-500">*</span>
+                                @endif
+                            </label>
+                            <input 
+                                type="file" 
+                                wire:model="invoices"
+                                multiple
+                                accept="image/jpeg,image/jpg,image/png,application/pdf"
+                                class="input @error('invoices') input-error @enderror @error('invoices.*') input-error @enderror"
+                            >
+                            @error('invoices')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                            @error('invoices.*')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                            
+                            <!-- Upload Progress -->
+                            <div wire:loading wire:target="invoices" class="mt-2">
+                                <div class="flex items-center gap-2 text-primary-600">
+                                    <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span class="text-sm">Uploading files...</span>
+                                </div>
+                            </div>
+
+                            <p class="mt-1 text-xs text-secondary-500">
+                                Format: JPG, PNG, PDF • Max 5 files • 5MB per file • Total max 25MB
+                            </p>
+                        </div>
+
+                        <!-- Preview Uploaded Invoices (New) -->
+                        @if(!empty($invoices))
+                            <div>
+                                <p class="text-sm font-semibold text-secondary-900 mb-2">File yang akan diupload:</p>
+                                <div class="grid grid-cols-1 gap-2">
+                                    @foreach($invoices as $index => $invoice)
+                                        <div class="flex items-center justify-between p-2 bg-blue-50 border border-blue-200 rounded">
+                                            <div class="flex items-center gap-2">
+                                                <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+                                                </svg>
+                                                <span class="text-xs text-secondary-900">{{ $invoice->getClientOriginalName() }}</span>
+                                            </div>
+                                            <span class="text-xs text-secondary-500">
+                                                {{ number_format($invoice->getSize() / 1024, 0) }} KB
+                                            </span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- Warning jika belum upload -->
+                        @if(empty($invoices) && empty($existingInvoices))
+                            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                                <div class="flex gap-2">
+                                    <svg class="w-5 h-5 text-amber-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <div class="text-sm text-amber-800">
+                                        <p class="font-semibold">Invoice belum diupload</p>
+                                        <p class="text-xs mt-1">Invoice diperlukan untuk submit PR ke approval</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
                 <!-- Items -->
                 <div class="card animate-fade-in" style="animation-delay: 0.1s;">
                     <div class="card-header flex items-center justify-between mb-2">
@@ -237,6 +365,12 @@
                         <div class="flex justify-between items-center pb-3 border-b border-secondary-200">
                             <span class="text-sm text-secondary-600">Total Item</span>
                             <span class="font-bold text-secondary-900">{{ count($items) }} item</span>
+                        </div>
+                        <div class="flex justify-between items-center pb-3 border-b border-secondary-200">
+                            <span class="text-sm text-secondary-600">Total Invoice</span>
+                            <span class="font-bold text-secondary-900">
+                                {{ count($existingInvoices) + count($invoices) }} file
+                            </span>
                         </div>
                         <div class="flex justify-between items-center pb-3 border-b border-secondary-200">
                             <span class="text-sm text-secondary-600">Total Harga</span>

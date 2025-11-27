@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\WithFileUploads;
 use App\Models\PurchaseRequisition;
+use App\Notifications\PrStatusChanged;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -147,6 +148,15 @@ class PrApproval extends Component
             'approved_at' => now(),
             'manager_signature_path' => $signaturePath,
         ]);
+
+        if ($pr->creator) {
+            $pr->creator->notify(
+                new PrStatusChanged($pr, 'approved')
+            );
+        }
+
+        // Notifikasi Livewire (realtime)
+        $this->dispatch('notificationReceived');
 
         activity()
             ->causedBy(Auth::user())

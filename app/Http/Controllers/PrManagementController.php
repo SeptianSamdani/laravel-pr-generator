@@ -18,46 +18,61 @@ class PrManagementController extends Controller
     {
         $pr = PurchaseRequisition::findOrFail($prId);
 
-        // Authorization: only creator or admin can upload
-        if ($pr->created_by !== Auth::id() && !Auth::user()->can('pr.edit')) {
-            abort(403, 'Unauthorized');
-        }
+        try {
+            // Authorization
+            if ($pr->created_by !== Auth::id() && !Auth::user()->can('pr.edit')) {
+                abort(403, 'Unauthorized');
+            }
 
-        // Validate
-        $request->validate([
-            'invoices' => 'required|array|max:5',
-            'invoices.*' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120', // 5MB max
-        ]);
-
-        $uploaded = [];
-
-        foreach ($request->file('invoices') as $file) {
-            // Store file
-            $path = $file->store('public/invoices');
-            
-            // Create invoice record
-            $invoice = PrInvoice::create([
-                'purchase_requisition_id' => $pr->id,
-                'file_name' => $file->getClientOriginalName(),
-                'file_path' => $path,
-                'file_type' => $file->getMimeType(),
-                'file_size' => $file->getSize(),
-                'uploaded_by' => Auth::id(),
+            // Validate first
+            $request->validate([
+                'invoices' => 'required|array|max:5',
+                'invoices.*' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
             ]);
 
-            $uploaded[] = $invoice;
+            // Total size check
+            $totalSize = collect($request->file('invoices'))->sum(fn($f) => $f->getSize());
+            if ($totalSize > 26214400) {
+                return response()->json(['error' => 'Total file size melebihi 25MB'], 400);
+            }
 
-            // Log activity
-            activity()
-                ->causedBy(Auth::user())
-                ->performedOn($pr)
-                ->log('Invoice uploaded: ' . $invoice->file_name);
+            // Disk space
+            $freeSpace = disk_free_space(storage_path('app/public'));
+            if ($freeSpace < 104857600) {
+                return response()->json(['error' => 'Storage penuh, hubungi admin'], 500);
+            }
+
+            $uploaded = [];
+
+            foreach ($request->file('invoices') as $file) {
+                $path = $file->store('invoices', 'public');
+
+                $invoice = PrInvoice::create([
+                    'purchase_requisition_id' => $pr->id,
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => $path,
+                    'file_type' => $file->getMimeType(),
+                    'file_size' => $file->getSize(),
+                    'uploaded_by' => Auth::id(),
+                ]);
+
+                $uploaded[] = $invoice;
+
+                activity()
+                    ->causedBy(Auth::user())
+                    ->performedOn($pr)
+                    ->log("Invoice uploaded: {$invoice->file_name}");
+            }
+
+            return response()->json([
+                'message' => count($uploaded) . ' invoice(s) uploaded successfully',
+                'invoices' => $uploaded,
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Invoice upload failed: '.$e->getMessage());
+            return response()->json(['error' => 'Upload gagal, coba lagi'], 500);
         }
-
-        return response()->json([
-            'message' => count($uploaded) . ' invoice(s) uploaded successfully',
-            'invoices' => $uploaded,
-        ]);
     }
 
     /**

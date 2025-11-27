@@ -107,7 +107,7 @@ class Dashboard extends Component
         return [
             'total_prs' => $totalPRs,
             'total_amount' => $totalAmount,
-            'submitted' => $submittedCount,
+            'pending' => $submittedCount,      // ← Ganti 'submitted' jadi 'pending'
             'approved' => $approvedCount,
             'paid' => $paidCount,
             'rejected' => $rejectedCount,

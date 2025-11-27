@@ -60,6 +60,12 @@ class PrInvoice extends Model
         return $this->file_type === 'application/pdf';
     }
 
+    public function getFileUrlAttribute()
+    {
+        return Storage::disk('public')->url($this->file_path);
+    }
+
+
     /**
      * Delete file when model is deleted
      */
