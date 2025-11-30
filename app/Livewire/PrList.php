@@ -109,6 +109,6 @@ class PrList extends Component
         return view('livewire.pr-list', [
             'purchaseRequisitions' => $purchaseRequisitions,
             'outlets' => $outlets,
-        ])->layout('components.layouts.app'); 
+        ])->layout('components.layouts.app', ['title' => 'List Purchase Requisitions']);
     }
 }

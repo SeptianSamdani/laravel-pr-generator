@@ -310,6 +310,6 @@ class PrApproval extends Component
             'pendingPrs' => $pendingPrs,
             'outlets' => $outlets,
             'stats' => $stats,
-        ])->layout('components.layouts.app');
+        ])->layout('components.layouts.app', ['title' => 'Approval Purchase Requisitions']);
     }
 }

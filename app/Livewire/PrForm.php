@@ -343,6 +343,6 @@ class PrForm extends Component
 
     public function render()
     {
-        return view('livewire.pr-form')->layout('components.layouts.app');
+        return view('livewire.pr-form')->layout('components.layouts.app', ['title' => 'Form Purchase Requisitions']);
     }
 }

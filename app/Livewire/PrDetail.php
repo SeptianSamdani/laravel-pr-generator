@@ -330,6 +330,6 @@ class PrDetail extends Component
 
     public function render()
     {
-        return view('livewire.pr-detail')->layout('components.layouts.app');
+        return view('livewire.pr-detail')->layout('components.layouts.app', ['title' => 'Detail Purchase Requisitions']);
     }
 }
