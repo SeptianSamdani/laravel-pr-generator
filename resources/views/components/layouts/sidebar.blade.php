@@ -27,6 +27,7 @@
                 ['name' => 'Dashboard', 'route' => 'dashboard', 'icon' => 'home', 'permission' => null],
                 ['name' => 'Purchase Requisition', 'route' => 'pr.index', 'icon' => 'file-text', 'permission' => 'pr.view'],
                 ['name' => 'Approval', 'route' => 'approval.index', 'icon' => 'check-circle', 'permission' => 'pr.approve'],
+                ['name' => 'User Management', 'route' => 'users.index', 'icon' => 'users', 'permission' => 'user.view'],
             ];
         @endphp
 
@@ -47,15 +48,23 @@
                     
                     {{-- Icon Container --}}
                     <div class="icon-container flex-shrink-0 flex justify-center w-5 h-5">
-                        <svg class="w-5 h-5 icon-svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            @if($menu['icon'] === 'home')
+                        @if($menu['icon'] === 'home')
+                            <svg class="w-5 h-5 icon-svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                            @elseif($menu['icon'] === 'file-text')
+                            </svg>
+                        @elseif($menu['icon'] === 'file-text')
+                            <svg class="w-5 h-5 icon-svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            @elseif($menu['icon'] === 'check-circle')
+                            </svg>
+                        @elseif($menu['icon'] === 'check-circle')
+                            <svg class="w-5 h-5 icon-svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            @endif
-                        </svg>
+                            </svg>
+                        @elseif($menu['icon'] === 'users')
+                            <svg class="w-5 h-5 icon-svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                        @endif
                     </div>
                     
                     <span class="nav-text truncate">{{ $menu['name'] }}</span>

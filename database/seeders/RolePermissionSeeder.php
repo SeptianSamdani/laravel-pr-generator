@@ -10,9 +10,6 @@ use Illuminate\Support\Facades\Hash;
 
 class RolePermissionSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         // Reset cached roles and permissions
@@ -30,13 +27,22 @@ class RolePermissionSeeder extends Seeder
             'pr.reject',
             'pr.download',
             
-            // User Permissions
+            // User Management Permissions
             'user.view',
             'user.create',
             'user.edit',
             'user.delete',
             'user.activate',
             'user.deactivate',
+            'user.reset-password',
+            'user.assign-role',
+            
+            // Role & Permission Management
+            'role.view',
+            'role.create',
+            'role.edit',
+            'role.delete',
+            'role.assign-permission',
             
             // Outlet Permissions
             'outlet.view',
@@ -68,7 +74,7 @@ class RolePermissionSeeder extends Seeder
         $admin = Role::create(['name' => 'admin']);
         $admin->givePermissionTo([
             'pr.view', 'pr.create', 'pr.edit', 'pr.delete', 'pr.submit', 'pr.download',
-            'user.view', 'user.create', 'user.edit', 'user.activate', 'user.deactivate',
+            'user.view', 'user.create', 'user.edit', 'user.activate', 'user.deactivate', 'user.reset-password', 'user.assign-role',
             'outlet.view', 'outlet.create', 'outlet.edit', 'outlet.delete',
             'report.view', 'report.export',
             'settings.view', 'activity.view',
@@ -78,6 +84,7 @@ class RolePermissionSeeder extends Seeder
         $manager = Role::create(['name' => 'manager']);
         $manager->givePermissionTo([
             'pr.view', 'pr.approve', 'pr.reject', 'pr.download',
+            'user.view',
             'outlet.view',
             'report.view', 'report.export',
             'activity.view',

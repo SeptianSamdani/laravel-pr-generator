@@ -200,21 +200,21 @@
                                     </a>
 
                                     {{-- APPROVE --}}
-                                    <button 
+                                    {{-- <button 
                                         wire:click="approvePr({{ $pr->id }})"
                                         wire:confirm="Approve PR {{ $pr->pr_number }}?"
                                         class="text-green-600 hover:text-green-800 p-1"
                                         title="Approve">
                                         <x-icon name="check" class="w-5 h-5" />
-                                    </button>
+                                    </button> --}}
 
                                     {{-- REJECT --}}
-                                    <button 
+                                    {{-- <button 
                                         wire:click="openRejectModal({{ $pr->id }})"
                                         class="text-red-600 hover:text-red-800 p-1"
                                         title="Reject">
                                         <x-icon name="x" class="w-5 h-5" />
-                                    </button>
+                                    </button> --}}
 
                                 </div>
                             </td>

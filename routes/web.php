@@ -9,6 +9,7 @@ use App\Livewire\PrForm;
 use App\Livewire\PrList;
 use App\Livewire\PrDetail;
 use App\Livewire\PrApproval;
+use App\Livewire\UserManagement;
 
 /*
 |--------------------------------------------------------------------------
@@ -130,6 +131,11 @@ Route::middleware('auth')->group(function () {
     */
     Route::prefix('approval')->middleware('permission:pr.approve')->name('approval.')->group(function () {
         Route::get('/', PrApproval::class)->name('index');
+    });
+
+    // User Management Routes (Admin, Super Admin)
+    Route::prefix('users')->middleware('permission:user.view')->name('users.')->group(function () {
+        Route::get('/', UserManagement::class)->name('index');
     });
 
     /*
