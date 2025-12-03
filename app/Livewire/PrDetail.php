@@ -5,7 +5,9 @@ namespace App\Livewire;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use App\Models\PurchaseRequisition;
+use App\Services\PrDocxGeneratorService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class PrDetail extends Component
@@ -164,6 +166,20 @@ class PrDetail extends Component
             'approved_at' => now(),
             'manager_signature_path' => $signaturePath,
         ]);
+
+        // NEW: Auto-generate DOCX after approval
+        try {
+            $docxService = app(PrDocxGeneratorService::class);
+            $docxPath = $docxService->generateDocx($this->pr);
+            
+            activity()
+                ->causedBy(Auth::user())
+                ->performedOn($this->pr)
+                ->withProperties(['docx_generated' => $docxPath])
+                ->log('PR approved with signature - DOCX auto-generated');
+        } catch (\Exception $e) {
+            Log::error('DOCX generation failed after approval: ' . $e->getMessage());
+        }
 
         activity()
             ->causedBy(Auth::user())

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\PrDocxController;
 use App\Http\Controllers\PrPdfController;
 use App\Http\Controllers\PrManagementController;
 use App\Livewire\Dashboard;
@@ -74,6 +75,26 @@ Route::middleware('auth')->group(function () {
         Route::get('/{id}/preview', [PrPdfController::class, 'preview'])
             ->middleware('permission:pr.download')
             ->name('preview');
+
+        // DOCX Download (Alternative to HTML PDF)
+        Route::get('/{id}/docx', [PrDocxController::class, 'downloadDocx'])
+            ->middleware('permission:pr.download')
+            ->name('docx');
+
+        // PDF from DOCX Template
+        Route::get('/{id}/pdf-docx', [PrDocxController::class, 'downloadPdf'])
+            ->middleware('permission:pr.download')
+            ->name('pdf.docx');
+
+        // Preview PDF from DOCX
+        Route::get('/{id}/preview-docx', [PrDocxController::class, 'previewPdf'])
+            ->middleware('permission:pr.download')
+            ->name('preview.docx');
+
+        // Keep old HTML-based PDF route
+        Route::get('/{id}/pdf', [PrPdfController::class, 'download'])
+            ->middleware('permission:pr.download')
+            ->name('pdf');
 
         /*
         |--------------------------------------------------------------------------

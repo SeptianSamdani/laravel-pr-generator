@@ -14,51 +14,54 @@
 
         @page {
             size: A4;
-            margin: 10mm;
+            margin: 15mm;
         }
 
         body {
-            font-family: Arial, sans-serif;
-            font-size: 10pt;
-            line-height: 1.3;
+            font-family: 'Arial', sans-serif;
+            font-size: 11pt;
+            line-height: 1.4;
             color: #000;
-            width: 180mm !important;
-            margin: 0 auto;
         }
 
         .container {
             width: 100%;
-            padding: 10px 15px;
+            max-width: 190mm;
+            margin: 0 auto;
         }
 
-        /* HEADER */
+        /* HEADER WITH LOGO */
         .header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            border-bottom: 3px solid #f97316;
+            padding-bottom: 15px;
         }
 
         .header img {
-            width: 180px;
-            margin-bottom: 5px;
+            width: 150px;
+            margin-bottom: 10px;
         }
 
         .title {
-            font-size: 18pt;
+            font-size: 20pt;
             font-weight: bold;
             text-align: center;
-            margin: 5px 0 20px 0;
-            color: #000;
-            letter-spacing: 0.5px;
+            margin: 10px 0;
+            color: #f97316;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
 
-        /* Status Badge */
+        /* Status Badge - Positioned top right */
         .status-badge {
+            float: right;
             display: inline-block;
-            padding: 4px 12px;
-            border-radius: 3px;
+            padding: 6px 16px;
+            border-radius: 4px;
             font-weight: bold;
-            font-size: 9pt;
-            margin-bottom: 15px;
+            font-size: 10pt;
+            margin-top: -50px;
         }
 
         .status-approved {
@@ -71,170 +74,201 @@
             color: white;
         }
 
-        /* Address Section */
+        /* Address Section with Box */
         .address-section {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            padding: 12px;
+            background-color: #fff5f0;
+            border: 2px solid #f97316;
+            border-radius: 6px;
         }
 
         .address-label {
             font-weight: bold;
-            margin-bottom: 3px;
+            font-size: 11pt;
+            color: #f97316;
+            margin-bottom: 6px;
         }
 
         .address-content {
-            font-size: 9pt;
-            line-height: 1.4;
+            font-size: 10pt;
+            line-height: 1.5;
+            color: #333;
         }
 
-        /* Info Grid */
+        /* Info Grid - Horizontal Layout */
         .info-grid {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
         }
 
         .info-row {
-            margin-bottom: 3px;
-            font-size: 9pt;
+            display: table;
+            width: 100%;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-cell {
+            display: table-cell;
+            padding: 8px 12px;
+            vertical-align: middle;
+            border-right: 1px solid #ddd;
+        }
+
+        .info-cell:last-child {
+            border-right: none;
         }
 
         .info-label {
-            display: inline-block;
             font-weight: bold;
-            width: 120px;
-            vertical-align: top;
+            width: 25%;
+            background-color: #fff5f0;
+            color: #f97316;
         }
 
         .info-value {
-            display: inline-block;
+            width: 25%;
         }
 
-        /* Items Table */
+        /* Items Table - Clean Design */
         .items-table {
             width: 100%;
-            max-width: 175mm;
             border-collapse: collapse;
-            margin-top: 10px;
-            margin-bottom: 20px;
-            table-layout: fixed;
-            overflow-wrap: break-word;
-        }
-
-        .items-table-wrapper {
-            transform: scale(0.90);
-            transform-origin: top left;
-        }
-
-
-        .items-table th, .items-table td {
-            border: 1px solid #000;
-            padding: 4px 5px;
-            font-size: 7.5pt !important;
-            word-wrap: break-word;
+            margin: 20px 0;
         }
 
         .items-table th {
-            background: #f0f0f0;
-            color: #000;
-            text-align: center;
+            background-color: #f97316;
+            color: white;
+            padding: 10px 8px;
+            font-size: 10pt;
             font-weight: bold;
+            text-align: center;
+            border: 1px solid #ea580c;
+        }
+
+        .items-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            font-size: 10pt;
+        }
+
+        .items-table tbody tr:nth-child(even) {
+            background-color: #fafafa;
         }
 
         .items-table tfoot tr {
-            background-color: #f0f0f0;
+            background-color: #fff5f0;
             font-weight: bold;
+            border-top: 2px solid #f97316;
+        }
+
+        .items-table tfoot td {
+            padding: 10px 8px;
+            font-size: 11pt;
         }
 
         .right { text-align: right; }
         .center { text-align: center; }
+        .left { text-align: left; }
+
+        /* Payment Info Box */
+        .payment-info {
+            margin: 25px 0;
+            padding: 15px;
+            background-color: #eff6ff;
+            border: 2px solid #3b82f6;
+            border-radius: 6px;
+        }
+
+        .payment-title {
+            font-weight: bold;
+            font-size: 12pt;
+            margin-bottom: 10px;
+            color: #3b82f6;
+            text-transform: uppercase;
+        }
+
+        .payment-row {
+            margin-bottom: 6px;
+            font-size: 10pt;
+            line-height: 1.6;
+        }
+
+        .payment-label {
+            display: inline-block;
+            width: 35%;
+            font-weight: bold;
+            color: #1e40af;
+        }
 
         /* Signature Section */
         .signatures {
             width: 100%;
             margin-top: 40px;
             page-break-inside: avoid;
+            display: table;
         }
 
         .signature-box {
-            display: inline-block;
-            width: 48%;
+            display: table-cell;
+            width: 50%;
             text-align: center;
             vertical-align: top;
-            padding: 10px;
-        }
-
-        .signature-left {
-            float: left;
-        }
-
-        .signature-right {
-            float: right;
+            padding: 15px;
         }
 
         .signature-title {
             font-weight: bold;
-            font-size: 10pt;
-            margin-bottom: 50px;
+            font-size: 11pt;
+            margin-bottom: 60px;
             color: #000;
+            text-transform: uppercase;
         }
 
         .signature-image {
             margin: 15px auto;
-            max-height: 70px;
-            max-width: 180px;
+            max-height: 80px;
+            max-width: 200px;
         }
 
         .signature-line {
-            border-top: 1px solid #000;
-            width: 70%;
+            border-top: 2px solid #000;
+            width: 75%;
             margin: 0 auto;
-            padding-top: 5px;
-            font-weight: normal;
-            color: #000;
-            font-size: 9pt;
+            padding-top: 8px;
+            font-weight: bold;
+            font-size: 10pt;
         }
 
         .signature-date {
             font-size: 9pt;
-            color: #000;
-            margin-top: 3px;
+            color: #666;
+            margin-top: 5px;
         }
 
         /* Footer */
         .footer {
-            margin-top: 30px;
-            padding-top: 10px;
-            border-top: 1px solid #ccc;
+            margin-top: 40px;
+            padding-top: 15px;
+            border-top: 2px solid #f97316;
             text-align: center;
-            font-size: 8pt;
+            font-size: 9pt;
             color: #666;
         }
 
-        /* Payment Info */
-        .payment-info {
-            margin: 20px 0;
-            padding: 12px;
-            background-color: #f0f9ff;
-            border: 1px solid #3b82f6;
-        }
-
-        .payment-title {
+        .footer-company {
             font-weight: bold;
-            font-size: 11pt;
-            margin-bottom: 8px;
-            color: #3b82f6;
-        }
-
-        .payment-row {
+            color: #f97316;
+            font-size: 10pt;
             margin-bottom: 5px;
-            font-size: 9pt;
         }
 
-        .payment-label {
-            display: inline-block;
-            width: 30%;
-            font-weight: bold;
-        }
-
-        /* Clear float */
+        /* Clearfix */
         .clearfix::after {
             content: "";
             display: table;
@@ -245,8 +279,8 @@
 <body>
 <div class="container">
 
-    <!-- Logo + Title -->
-    <div class="header">
+    <!-- Header with Logo -->
+    <div class="header clearfix">
         @php
             $logoPath = public_path('sushi-mentai-logo.png');
             $logoData = file_exists($logoPath) ? base64_encode(file_get_contents($logoPath)) : '';
@@ -256,12 +290,12 @@
         @if($logoData)
             <img src="data:{{ $logoMime }};base64,{{ $logoData }}" alt="Sushi Mentai Logo">
         @else
-            <div style="text-align: center; font-weight: bold; font-size: 16pt;">SUSHI MENTAI</div>
+            <div style="text-align: center; font-weight: bold; font-size: 18pt; color: #f97316;">SUSHI MENTAI</div>
         @endif
         
-        <div class="title">PURCHASE REQUISITION</div>
+        <div class="title">Purchase Requisition</div>
 
-        <!-- PR Status -->
+        <!-- Status Badge (Top Right) -->
         @if($pr->isApproved() || $pr->isPaid())
         <span class="status-badge {{ $pr->isPaid() ? 'status-paid' : 'status-approved' }}">
             {{ $pr->isPaid() ? 'PAID' : 'APPROVED' }}
@@ -271,7 +305,7 @@
 
     <!-- Address Section -->
     <div class="address-section">
-        <div class="address-label">Kepada Head Office</div>
+        <div class="address-label">Kepada: Head Office</div>
         <div class="address-content">
             Ruko Darwin Barat No.3, Gading Serpong Kel. Medang<br>
             Kec. Pagedangan Kabupaten Tanggerang, Banten 15334
@@ -281,34 +315,30 @@
     <!-- Info Grid -->
     <div class="info-grid">
         <div class="info-row">
-            <span class="info-label">PR Number</span>
-            <span class="info-value">{{ $pr->pr_number }}</span>
-            <span class="info-label" style="margin-left: 60px;">Perihal</span>
-            <span class="info-value">{{ $pr->perihal }}</span>
+            <div class="info-cell info-label">Tanggal</div>
+            <div class="info-cell info-value">{{ $pr->tanggal->format('d/m/Y') }}</div>
+            <div class="info-cell info-label">Perihal</div>
+            <div class="info-cell info-value">{{ $pr->perihal }}</div>
         </div>
         <div class="info-row">
-            <span class="info-label">Tanggal</span>
-            <span class="info-value">{{ $pr->tanggal->format('d/m/Y') }}</span>
-            <span class="info-label" style="margin-left: 60px;">Alasan</span>
-            <span class="info-value">{{ $pr->alasan ?? '-' }}</span>
-        </div>
-        <div class="info-row">
-            <span class="info-label">Outlet</span>
-            <span class="info-value">{{ $pr->outlet->name }}</span>
+            <div class="info-cell info-label">Alasan</div>
+            <div class="info-cell info-value">{{ $pr->alasan ?? '-' }}</div>
+            <div class="info-cell info-label">Outlet</div>
+            <div class="info-cell info-value">{{ $pr->outlet->name }}</div>
         </div>
     </div>
 
     <!-- Items Table -->
     <table class="items-table">
         <thead>
-        <tr>
-            <th style="width:6%;">NO</th>
-            <th style="width:7%;">JUMLAH</th>
-            <th style="width:32%;">NAMA ITEM</th>
-            <th style="width:8%;">SATUAN</th>
-            <th style="width:18%;">HARGA</th>
-            <th style="width:18%;">SUBTOTAL</th>
-        </tr>
+            <tr>
+                <th style="width:8%;">NO</th>
+                <th style="width:12%;">JUMLAH</th>
+                <th style="width:40%;">NAMA ITEM</th>
+                <th style="width:12%;">SATUAN</th>
+                <th style="width:14%;">HARGA</th>
+                <th style="width:14%;">SUBTOTAL</th>
+            </tr>
         </thead>
 
         <tbody>
@@ -316,7 +346,7 @@
             <tr>
                 <td class="center">{{ $loop->iteration }}</td>
                 <td class="center">{{ $item->jumlah }}</td>
-                <td>{{ $item->nama_item }}</td>
+                <td class="left">{{ $item->nama_item }}</td>
                 <td class="center">{{ $item->satuan }}</td>
                 <td class="right">{{ number_format($item->harga, 0, ',', '.') }}</td>
                 <td class="right">{{ number_format($item->subtotal, 0, ',', '.') }}</td>
@@ -324,7 +354,7 @@
         @endforeach
 
         @php
-            $emptyRows = max(0, 6 - $pr->items->count());
+            $emptyRows = max(0, 4 - $pr->items->count());
         @endphp
 
         @for($i = 0; $i < $emptyRows; $i++)
@@ -340,17 +370,17 @@
         </tbody>
 
         <tfoot>
-        <tr>
-            <td colspan="5" class="right"><strong>TOTAL</strong></td>
-            <td class="right"><strong>Rp {{ number_format($pr->total, 0, ',', '.') }}</strong></td>
-        </tr>
+            <tr>
+                <td colspan="5" class="right"><strong>TOTAL</strong></td>
+                <td class="right"><strong>Rp {{ number_format($pr->total, 0, ',', '.') }}</strong></td>
+            </tr>
         </tfoot>
     </table>
 
     <!-- Payment Info (if paid) -->
     @if($pr->isPaid() && $pr->payment_date)
     <div class="payment-info">
-        <div class="payment-title">INFORMASI PEMBAYARAN</div>
+        <div class="payment-title">Informasi Pembayaran</div>
         
         <div class="payment-row">
             <span class="payment-label">Tanggal Transfer:</span>
@@ -358,7 +388,7 @@
         </div>
 
         <div class="payment-row">
-            <span class="payment-label">Jumlah:</span>
+            <span class="payment-label">Jumlah Transfer:</span>
             <strong>Rp {{ number_format($pr->payment_amount, 0, ',', '.') }}</strong>
         </div>
 
@@ -380,10 +410,17 @@
     @endif
 
     <!-- Signatures -->
-    <div class="signatures clearfix">
+    <div class="signatures">
         <!-- Staff/Creator Signature -->
-        <div class="signature-box signature-left">
+        <div class="signature-box">
             <div class="signature-title">Pemohon</div>
+            
+            @if($pr->hasSignature())
+                <div style="min-height: 80px;"></div>
+            @else
+                <div style="min-height: 80px;"></div>
+            @endif
+            
             <div class="signature-line">
                 {{ $pr->creator->name }}
             </div>
@@ -393,7 +430,7 @@
         </div>
 
         <!-- Manager Signature -->
-        <div class="signature-box signature-right">
+        <div class="signature-box">
             <div class="signature-title">Menyetujui</div>
             
             @if($pr->hasSignature())
@@ -411,13 +448,13 @@
                 @endphp
 
                 @if($signatureData)
-                    <div style="min-height: 70px; margin: 10px 0;">
+                    <div style="min-height: 80px; margin: 10px 0;">
                         <img src="data:{{ $signatureMime }};base64,{{ $signatureData }}" 
                             alt="Manager Signature" 
                             class="signature-image">
                     </div>
                 @else
-                    <div style="min-height: 50px;"></div>
+                    <div style="min-height: 80px;"></div>
                 @endif
                 
                 <div class="signature-line">
@@ -427,9 +464,9 @@
                     {{ $pr->approved_at->format('d/m/Y') }}
                 </div>
             @else
-                <div style="min-height: 50px;"></div>
+                <div style="min-height: 80px;"></div>
                 <div class="signature-line">
-                    ( .................................. )
+                    ( ________________________ )
                 </div>
                 <div class="signature-date">
                     Tanggal: _______________
@@ -440,15 +477,9 @@
 
     <!-- Footer -->
     <div class="footer">
-        <div>
-            <strong>Sushi Mentai</strong> - Japanese Restaurant
-        </div>
-        <div style="margin-top: 3px;">
-            Dokumen ini dihasilkan secara otomatis oleh sistem PR Generator
-        </div>
-        <div style="margin-top: 3px;">
-            Dicetak pada: {{ now()->format('d M Y, H:i') }} WIB
-        </div>
+        <div class="footer-company">Sushi Mentai - Japanese Restaurant</div>
+        <div>Dokumen ini dihasilkan secara otomatis oleh sistem PR Generator</div>
+        <div style="margin-top: 5px;">Dicetak pada: {{ now()->format('d M Y, H:i') }} WIB</div>
     </div>
 
 </div>
