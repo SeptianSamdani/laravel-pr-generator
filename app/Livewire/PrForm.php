@@ -27,9 +27,19 @@ class PrForm extends Component
     public $items = [];
     public $total = 0;
     
-    // NEW: Invoice uploads
+    // Invoice uploads
     public $invoices = [];
     public $existingInvoices = [];
+    
+    // NEW: Staff Signature
+    public $staffSignature;
+    public $existingStaffSignature = null;
+    
+    // NEW: Recipient Info
+    public $recipient_name = '';
+    public $recipient_bank = '';
+    public $recipient_account_number = '';
+    public $recipient_phone = '';
     
     public $outlets = [];
     public $isEdit = false;
@@ -45,12 +55,30 @@ class PrForm extends Component
             'items.*.jumlah' => 'required|integer|min:1',
             'items.*.satuan' => 'required|string|max:50',
             'items.*.harga' => 'required|numeric|min:0',
+            
+            // NEW: Recipient Info (required for submit)
+            'recipient_name' => $this->status === 'submitted' ? 'required|string|max:255' : 'nullable|string|max:255',
+            'recipient_bank' => $this->status === 'submitted' ? 'required|string|max:100' : 'nullable|string|max:100',
+            'recipient_account_number' => $this->status === 'submitted' ? 'required|string|max:50' : 'nullable|string|max:50',
+            'recipient_phone' => 'nullable|string|max:20',
         ];
 
-        // Validasi invoice hanya untuk submit (bukan draft)
+        // Validasi invoice & staff signature HANYA untuk submitted status
         if ($this->status === 'submitted') {
-            $rules['invoices'] = 'required|array|min:1|max:5';
+            // Invoice required (bisa existing atau baru)
+            if (empty($this->invoices) && empty($this->existingInvoices)) {
+                $rules['invoices'] = 'required|array|min:1|max:5';
+            } else {
+                $rules['invoices'] = 'nullable|array|max:5';
+            }
             $rules['invoices.*'] = 'required|file|mimes:jpg,jpeg,png,pdf|max:5120';
+            
+            // Staff signature required (bisa existing atau baru)
+            if (empty($this->existingStaffSignature)) {
+                $rules['staffSignature'] = 'required|image|mimes:jpg,jpeg,png|max:2048';
+            } else {
+                $rules['staffSignature'] = 'nullable|image|mimes:jpg,jpeg,png|max:2048';
+            }
         }
 
         return $rules;
@@ -68,6 +96,14 @@ class PrForm extends Component
         'items.*.harga.min' => 'Harga tidak boleh negatif',
         'invoices.*.mimes' => 'Invoice harus berupa JPG, PNG, atau PDF',
         'invoices.*.max' => 'Ukuran invoice maksimal 5MB',
+        
+        // NEW: Recipient validation messages
+        'recipient_name.required' => 'Nama penerima harus diisi sebelum submit',
+        'recipient_bank.required' => 'Bank penerima harus diisi sebelum submit',
+        'recipient_account_number.required' => 'Nomor rekening penerima harus diisi sebelum submit',
+        'staffSignature.required' => 'Tanda tangan staff harus di-upload sebelum submit',
+        'staffSignature.image' => 'File harus berupa gambar',
+        'staffSignature.max' => 'Ukuran file maksimal 2MB',
     ];
 
     public function mount($id = null)
@@ -103,6 +139,15 @@ class PrForm extends Component
         $this->alasan = $pr->alasan;
         $this->outlet_id = $pr->outlet_id;
         $this->status = $pr->status;
+        
+        // NEW: Load recipient info
+        $this->recipient_name = $pr->recipient_name ?? '';
+        $this->recipient_bank = $pr->recipient_bank ?? '';
+        $this->recipient_account_number = $pr->recipient_account_number ?? '';
+        $this->recipient_phone = $pr->recipient_phone ?? '';
+        
+        // NEW: Load existing staff signature
+        $this->existingStaffSignature = $pr->staff_signature_path;
 
         $this->items = $pr->items->map(function ($item) {
             return [
@@ -165,13 +210,13 @@ class PrForm extends Component
         }, 0);
     }
 
-   public function removeExistingInvoice($invoiceId)
+    public function removeExistingInvoice($invoiceId)
     {
         try {
             $invoice = PrInvoice::find($invoiceId);
             
             if ($invoice && $invoice->purchase_requisition_id == $this->prId) {
-                // Delete file from storage (gunakan disk 'public')
+                // Delete file from storage
                 if (Storage::disk('public')->exists($invoice->file_path)) {
                     Storage::disk('public')->delete($invoice->file_path);
                 }
@@ -191,6 +236,7 @@ class PrForm extends Component
             session()->flash('error', 'Gagal menghapus invoice');
         }
     }
+
     public function saveDraft()
     {
         $this->status = 'draft';
@@ -212,10 +258,23 @@ class PrForm extends Component
                 return;
             }
 
-            // Validasi invoice HANYA untuk submitted status
+            // NEW: Validasi khusus untuk submitted status
             if ($this->status === 'submitted') {
+                // Cek invoice
                 if (empty($this->invoices) && empty($this->existingInvoices)) {
                     $this->addError('invoices', 'Minimal 1 invoice harus di-upload sebelum submit untuk approval');
+                    return;
+                }
+                
+                // NEW: Cek staff signature
+                if (empty($this->staffSignature) && empty($this->existingStaffSignature)) {
+                    $this->addError('staffSignature', 'Tanda tangan staff harus di-upload sebelum submit');
+                    return;
+                }
+                
+                // NEW: Cek recipient info
+                if (empty($this->recipient_name) || empty($this->recipient_bank) || empty($this->recipient_account_number)) {
+                    session()->flash('error', 'Data penerima transfer harus lengkap (Nama, Bank, Nomor Rekening) sebelum submit!');
                     return;
                 }
             }
@@ -259,6 +318,11 @@ class PrForm extends Component
                         'outlet_id' => $this->outlet_id,
                         'total' => $this->total,
                         'status' => $this->status,
+                        // NEW: Recipient info
+                        'recipient_name' => $this->recipient_name,
+                        'recipient_bank' => $this->recipient_bank,
+                        'recipient_account_number' => $this->recipient_account_number,
+                        'recipient_phone' => $this->recipient_phone,
                     ]);
                 } else {
                     $pr = PurchaseRequisition::create([
@@ -269,6 +333,11 @@ class PrForm extends Component
                         'total' => $this->total,
                         'status' => $this->status,
                         'created_by' => Auth::id(),
+                        // NEW: Recipient info
+                        'recipient_name' => $this->recipient_name,
+                        'recipient_bank' => $this->recipient_bank,
+                        'recipient_account_number' => $this->recipient_account_number,
+                        'recipient_phone' => $this->recipient_phone,
                     ]);
                 }
 
@@ -288,6 +357,17 @@ class PrForm extends Component
                         'harga' => $item['harga'],
                         'subtotal' => $item['subtotal'],
                     ]);
+                }
+                
+                // NEW: Upload staff signature if provided
+                if ($this->staffSignature) {
+                    // Delete old signature if exists
+                    if ($this->existingStaffSignature && Storage::disk('public')->exists($this->existingStaffSignature)) {
+                        Storage::disk('public')->delete($this->existingStaffSignature);
+                    }
+                    
+                    $signaturePath = $this->staffSignature->store('signatures', 'public');
+                    $pr->update(['staff_signature_path' => $signaturePath]);
                 }
 
                 // Upload new invoices
@@ -320,6 +400,8 @@ class PrForm extends Component
                         'pr_number' => $pr->pr_number,
                         'total' => $pr->total,
                         'status' => $pr->status,
+                        'has_recipient_info' => !empty($pr->recipient_name),
+                        'has_staff_signature' => !empty($pr->staff_signature_path),
                     ])
                     ->log($this->isEdit ? 'PR updated' : 'PR created');
 

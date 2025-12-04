@@ -33,6 +33,7 @@ return new class extends Migration
             
             // NEW: Signature Manager (scan TTD/stempel)
             $table->string('manager_signature_path')->nullable();
+            $table->string('staff_signature_path')->nullable(); 
             
             // NEW: Payment Info
             $table->date('payment_date')->nullable();
@@ -42,6 +43,11 @@ return new class extends Migration
             $table->string('payment_account_name')->nullable();
             $table->string('payment_proof_path')->nullable(); // Bukti transfer
             $table->timestamp('payment_uploaded_at')->nullable();
+
+            $table->string('recipient_name')->nullable(); 
+            $table->string('recipient_bank')->nullable(); 
+            $table->string('recipient_account_number')->nullable(); 
+            $table->string('recipient_phone')->nullable(); 
             
             $table->timestamps();
             

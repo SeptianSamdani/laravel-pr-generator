@@ -21,6 +21,7 @@ class PurchaseRequisition extends Model
         'approved_at', 
         'rejection_note',
         'manager_signature_path',
+        'staff_signature_path', // BARU
         'payment_date',
         'payment_amount',
         'payment_bank',
@@ -28,6 +29,10 @@ class PurchaseRequisition extends Model
         'payment_account_name',
         'payment_proof_path',
         'payment_uploaded_at',
+        'recipient_name', // BARU
+        'recipient_bank', // BARU
+        'recipient_account_number', // BARU
+        'recipient_phone', // BARU
     ];
 
     protected $casts = [
@@ -39,9 +44,6 @@ class PurchaseRequisition extends Model
         'payment_amount' => 'decimal:2',
     ];
 
-    /**
-     * Boot method - Auto generate PR number
-     */
     protected static function boot()
     {
         parent::boot();
@@ -54,9 +56,7 @@ class PurchaseRequisition extends Model
         });
     }
 
-    /**
-     * Relations
-     */
+    // Relations
     public function items(): HasMany
     {
         return $this->hasMany(PrItem::class)->orderBy('order');
@@ -82,9 +82,18 @@ class PurchaseRequisition extends Model
         return $this->belongsTo(User::class, 'approved_by');
     }
 
-    /**
-     * Scopes
-     */
+    // Helper methods untuk nama
+    public function getStaffNameAttribute(): string
+    {
+        return $this->creator->name ?? '-';
+    }
+
+    public function getManagerNameAttribute(): string
+    {
+        return $this->approver->name ?? '-';
+    }
+
+    // Scopes
     public function scopeDraft($query)
     {
         return $query->where('status', 'draft');
@@ -105,9 +114,7 @@ class PurchaseRequisition extends Model
         return $query->where('status', 'paid');
     }
 
-    /**
-     * Helper methods
-     */
+    // Status checks
     public function isDraft(): bool
     {
         return $this->status === 'draft';
@@ -148,7 +155,12 @@ class PurchaseRequisition extends Model
         return $this->isSubmitted();
     }
 
-    public function hasSignature(): bool
+    public function hasStaffSignature(): bool
+    {
+        return !empty($this->staff_signature_path);
+    }
+
+    public function hasManagerSignature(): bool
     {
         return !empty($this->manager_signature_path);
     }
@@ -158,8 +170,19 @@ class PurchaseRequisition extends Model
         return !empty($this->payment_proof_path);
     }
 
+    public function hasRecipientInfo(): bool
+    {
+        return !empty($this->recipient_name) 
+            && !empty($this->recipient_bank) 
+            && !empty($this->recipient_account_number);
+    }
+
     public function isFullyCompleted(): bool
     {
-        return $this->isPaid() && $this->hasSignature() && $this->hasPaymentProof();
+        return $this->isPaid() 
+            && $this->hasStaffSignature() 
+            && $this->hasManagerSignature() 
+            && $this->hasPaymentProof()
+            && $this->hasRecipientInfo();
     }
 }

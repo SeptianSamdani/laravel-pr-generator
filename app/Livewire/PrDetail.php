@@ -21,7 +21,7 @@ class PrDetail extends Component
     public $canApprove = false;
     public $canUploadPayment = false; 
 
-    // NEW: Approval & Payment
+    // Approval & Payment
     public $showApproveModal = false;
     public $showRejectModal = false;
     public $showPaymentModal = false;
@@ -77,7 +77,7 @@ class PrDetail extends Component
             && $this->pr->isSubmitted()
             && $this->pr->created_by !== $user->id;
 
-        // NEW: Can upload payment if: manager role, status is approved
+        // Can upload payment if: manager role, status is approved
         $this->canUploadPayment = $user->can('pr.approve')
             && $this->pr->isApproved();
     }
@@ -158,7 +158,7 @@ class PrDetail extends Component
         ]);
 
         // Store signature
-       $signaturePath = $this->managerSignature->store('signatures', 'public');
+        $signaturePath = $this->managerSignature->store('signatures', 'public');
 
         $this->pr->update([
             'status' => 'approved',
@@ -167,7 +167,7 @@ class PrDetail extends Component
             'manager_signature_path' => $signaturePath,
         ]);
 
-        // NEW: Auto-generate DOCX after approval
+        // Auto-generate DOCX after approval
         try {
             $docxService = app(PrDocxGeneratorService::class);
             $docxPath = $docxService->generateDocx($this->pr);
@@ -257,9 +257,12 @@ class PrDetail extends Component
             return;
         }
 
-        // Pre-fill payment amount with PR total
+        // Pre-fill payment info from PR
         $this->paymentAmount = $this->pr->total;
         $this->paymentDate = now()->format('Y-m-d');
+        $this->paymentBank = $this->pr->recipient_bank ?? '';
+        $this->paymentAccountNumber = $this->pr->recipient_account_number ?? '';
+        $this->paymentAccountName = $this->pr->recipient_name ?? '';
         
         $this->showPaymentModal = true;
     }
@@ -325,23 +328,34 @@ class PrDetail extends Component
         $this->checkPermissions();
     }
 
-    public function downloadFile($type)
+    // NEW: Download Staff Signature
+    public function downloadStaffSignature()
     {
-        switch ($type) {
-            case 'signature':
-                if (!$this->pr->hasSignature()) {
-                    session()->flash('error', 'Signature tidak tersedia');
-                    return;
-                }
-                return Storage::download($this->pr->manager_signature_path);
-
-            case 'payment':
-                if (!$this->pr->hasPaymentProof()) {
-                    session()->flash('error', 'Bukti transfer tidak tersedia');
-                    return;
-                }
-                return Storage::download($this->pr->payment_proof_path);
+        if (!$this->pr->hasStaffSignature()) {
+            session()->flash('error', 'Tanda tangan staff tidak tersedia');
+            return;
         }
+        return Storage::disk('public')->download($this->pr->staff_signature_path);
+    }
+
+    // Download Manager Signature
+    public function downloadManagerSignature()
+    {
+        if (!$this->pr->hasManagerSignature()) {
+            session()->flash('error', 'Tanda tangan manager tidak tersedia');
+            return;
+        }
+        return Storage::disk('public')->download($this->pr->manager_signature_path);
+    }
+
+    // Download Payment Proof
+    public function downloadPaymentProof()
+    {
+        if (!$this->pr->hasPaymentProof()) {
+            session()->flash('error', 'Bukti transfer tidak tersedia');
+            return;
+        }
+        return Storage::disk('public')->download($this->pr->payment_proof_path);
     }
 
     public function render()

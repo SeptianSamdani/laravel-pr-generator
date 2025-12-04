@@ -65,7 +65,6 @@ class PrInvoice extends Model
         return Storage::disk('public')->url($this->file_path);
     }
 
-
     /**
      * Delete file when model is deleted
      */
