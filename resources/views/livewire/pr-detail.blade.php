@@ -134,6 +134,33 @@
                             </div>
                         </div>
                     @endif
+
+                    <!-- Recipient Info -->
+                    @if($pr->hasRecipientInfo())
+                    <div class="mt-4 pt-4 border-t border-secondary-200">
+                    <h4 class="font-bold text-secondary-900 mb-3">Informasi Penerima Transfer</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-secondary-600 mb-1">Nama Penerima</p>
+                        <p class="font-semibold text-secondary-900">{{ $pr->recipient_name }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-secondary-600 mb-1">Bank</p>
+                        <p class="font-semibold text-secondary-900">{{ $pr->recipient_bank }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-secondary-600 mb-1">No. Rekening</p>
+                        <p class="font-semibold text-secondary-900">{{ $pr->recipient_account_number }}</p>
+                    </div>
+                    @if($pr->recipient_phone)
+                        <div>
+                            <p class="text-sm text-secondary-600 mb-1">No. Telepon</p>
+                            <p class="font-semibold text-secondary-900">{{ $pr->recipient_phone }}</p>
+                        </div>
+                    @endif
+                    </div>
+                    </div>
+                    @endif
                 </div>
             </div>
 
@@ -186,8 +213,42 @@
             </div>
             @endif
 
+            <!-- Staff Signature Section -->
+            @if($pr->hasStaffSignature())
+            <div class="card animate-fade-in" style="animation-delay: 0.075s;">
+            <div class="card-header">
+            <h3 class="text-lg font-bold text-white">Tanda Tangan Staff</h3>
+            </div>
+            <div class="card-body">
+            <div class="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="font-semibold text-secondary-900">Tanda Tangan Staff Tersedia</p>
+                    <p class="text-sm text-secondary-600">Ditandatangani oleh {{ $pr->creator->name }}</p>
+                    <p class="text-xs text-secondary-500">{{ $pr->created_at->format('d M Y, H:i') }}</p>
+                </div>
+            </div>
+            <button 
+                wire:click="downloadStaffSignature"
+                class="btn-outline"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                Download
+            </button>
+            </div>
+            </div>
+            </div>
+            @endif
+
             <!-- Manager Signature -->
-            @if($pr->hasSignature())
+            @if($pr->hasManagerSignature())
             <div class="card animate-fade-in" style="animation-delay: 0.1s;">
                 <div class="card-header">
                     <h3 class="text-lg font-bold text-white">Tanda Tangan Manager</h3>
@@ -207,7 +268,7 @@
                             </div>
                         </div>
                         <button 
-                            wire:click="downloadSignature"
+                            wire:click="downloadManagerSignature"
                             class="btn-outline"
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
