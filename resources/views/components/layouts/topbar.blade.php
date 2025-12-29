@@ -1,6 +1,6 @@
 @props(['title' => 'Dashboard'])
 
-<header class="sticky top-0 z-20 h-16 bg-white/95 backdrop-blur-md border-b border-secondary-200">
+<header class="sticky top-0 z-20 h-16 bg-white/95 backdrop-blur-md">
     <div class="h-full px-6 flex items-center justify-between">
         
         {{-- LEFT SECTION --}}

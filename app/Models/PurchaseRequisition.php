@@ -21,7 +21,7 @@ class PurchaseRequisition extends Model
         'approved_at', 
         'rejection_note',
         'manager_signature_path',
-        'staff_signature_path', // BARU
+        'staff_signature_path',
         'payment_date',
         'payment_amount',
         'payment_bank',
@@ -29,10 +29,10 @@ class PurchaseRequisition extends Model
         'payment_account_name',
         'payment_proof_path',
         'payment_uploaded_at',
-        'recipient_name', // BARU
-        'recipient_bank', // BARU
-        'recipient_account_number', // BARU
-        'recipient_phone', // BARU
+        'recipient_name',
+        'recipient_bank',
+        'recipient_account_number',
+        'recipient_phone',
     ];
 
     protected $casts = [
@@ -153,6 +153,11 @@ class PurchaseRequisition extends Model
     public function canBeApproved(): bool
     {
         return $this->isSubmitted();
+    }
+
+    public function hasSignature(): bool
+    {
+        return $this->hasStaffSignature() && $this->hasManagerSignature();
     }
 
     public function hasStaffSignature(): bool
