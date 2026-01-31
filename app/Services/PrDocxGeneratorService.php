@@ -39,7 +39,7 @@ class PrDocxGeneratorService
         $processor->setValue('staff_name', $pr->creator->name);
         $processor->setValue('staff_date', $pr->created_at->format('d/m/Y'));
 
-        // 🆕 STAFF SIGNATURE
+        // STAFF SIGNATURE
         if ($pr->hasStaffSignature()) {
             $staffSignaturePath = $this->getSignatureFullPath($pr->staff_signature_path);
             if (file_exists($staffSignaturePath)) {
@@ -67,7 +67,7 @@ class PrDocxGeneratorService
         $processor->setValue('recipient_account_number', $pr->recipient_account_number ?? '-');
         $processor->setValue('recipient_phone', $pr->recipient_phone ?? '-');
 
-        // 4. ITEMS - Clone untuk 6 rows (seperti template asli)
+        // 4. ITEMS - Clone untuk 6 rows
         $maxRows = 6;
         $processor->cloneRow('item_no', $maxRows);
 
@@ -82,7 +82,7 @@ class PrDocxGeneratorService
             $processor->setValue("item_subtotal#$n", number_format($item->subtotal, 0, ',', '.'));
         }
 
-        // Fill empty rows (rows yang tidak terpakai)
+        // Fill empty rows
         for ($i = $pr->items->count() + 1; $i <= $maxRows; $i++) {
             $processor->setValue("item_no#$i", '');
             $processor->setValue("item_jumlah#$i", '');
@@ -97,37 +97,79 @@ class PrDocxGeneratorService
 
         // 6. MANAGER INFO
         if ($pr->isApproved() || $pr->isPaid() || $pr->isRejected()) {
-        $processor->setValue('manager_name', $pr->approver->name ?? '-');
-        $processor->setValue('manager_date', $pr->approved_at ? $pr->approved_at->format('d/m/Y') : '-');
+            $processor->setValue('manager_name', $pr->approver->name ?? '-');
+            $processor->setValue('manager_date', $pr->approved_at ? $pr->approved_at->format('d/m/Y') : '-');
 
-        // MANAGER SIGNATURE
-        if ($pr->hasManagerSignature()) {
-            $managerSignaturePath = $this->getSignatureFullPath($pr->manager_signature_path);
-            if (file_exists($managerSignaturePath)) {
+            // MANAGER SIGNATURE
+            if ($pr->hasManagerSignature()) {
+                $managerSignaturePath = $this->getSignatureFullPath($pr->manager_signature_path);
+                if (file_exists($managerSignaturePath)) {
+                    try {
+                        $processor->setImageValue('manager_signature', [
+                            'path' => $managerSignaturePath,
+                            'width' => 120,
+                            'height' => 60,
+                            'ratio' => true
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error('Failed to insert manager signature: ' . $e->getMessage());
+                        $processor->setValue('manager_signature', '[Signature]');
+                    }
+                } else {
+                    $processor->setValue('manager_signature', '[Signature Not Found]');
+                }
+            } else {
+                $processor->setValue('manager_signature', '');
+            }
+        } else {
+            $processor->setValue('manager_name', '');
+            $processor->setValue('manager_date', '');
+            $processor->setValue('manager_signature', '');
+        }
+
+        // 7. INVOICES
+        if ($pr->invoices->count() > 0) {
+            $invoiceImages = [];
+            
+            foreach ($pr->invoices as $invoice) {
+                $invoicePath = storage_path('app/public/' . $invoice->file_path);
+                
+                if (file_exists($invoicePath)) {
+                    // Skip PDF files
+                    if ($invoice->file_type === 'application/pdf') {
+                        continue;
+                    }
+                    
+                    $invoiceImages[] = [
+                        'path' => $invoicePath,
+                        'width' => 400,
+                        'height' => 300,
+                        'ratio' => true
+                    ];
+                }
+            }
+            
+            // Set first invoice image
+            if (!empty($invoiceImages)) {
                 try {
-                    $processor->setImageValue('manager_signature', [
-                        'path' => $managerSignaturePath,
-                        'width' => 120,
-                        'height' => 60,
+                    $processor->setImageValue('invoices', [
+                        'path' => $invoiceImages[0]['path'],
+                        'width' => 600,    
+                        'height' => 450,   
                         'ratio' => true
                     ]);
                 } catch (\Exception $e) {
-                    Log::error('Failed to insert manager signature: ' . $e->getMessage());
-                    $processor->setValue('manager_signature', '[Signature]');
+                    Log::error('Failed to insert invoice image: ' . $e->getMessage());
+                    $processor->setValue('invoices', '[Invoice Image]');
                 }
             } else {
-                $processor->setValue('manager_signature', '[Signature Not Found]');
+                $processor->setValue('invoices', '');
             }
         } else {
-            $processor->setValue('manager_signature', '');
+            $processor->setValue('invoices', 'Tidak ada invoice');
         }
-    } else {
-        $processor->setValue('manager_name', '');
-        $processor->setValue('manager_date', '');
-        $processor->setValue('manager_signature', '');
-    }
 
-        // 7. SAVE
+        // 8. SAVE
         $outputFileName = "PR-{$pr->pr_number}-" . now()->format('YmdHis') . ".docx";
         $outputPath = $this->exportPath . '/' . $outputFileName;
         
@@ -149,19 +191,103 @@ class PrDocxGeneratorService
         $docxPath = $this->generateDocx($pr);
         $pdfPath = str_replace('.docx', '.pdf', $docxPath);
         
-        $command = sprintf(
-            'soffice --headless --convert-to pdf --outdir %s %s 2>&1',
-            escapeshellarg(dirname($docxPath)),
-            escapeshellarg($docxPath)
-        );
+        // Find LibreOffice
+        $libreOfficePath = $this->findLibreOffice();
+        
+        if (!$libreOfficePath) {
+            Log::error('LibreOffice not found');
+            throw new \Exception('LibreOffice tidak ditemukan. Pastikan LibreOffice sudah terinstall.');
+        }
+        
+        Log::info("Using LibreOffice at: $libreOfficePath");
+        
+        // Build command based on OS
+        if ($this->isWindows()) {
+            // Windows command
+            $command = sprintf(
+                '"%s" --headless --convert-to pdf --outdir "%s" "%s"',
+                $libreOfficePath,
+                dirname($docxPath),
+                $docxPath
+            );
+        } else {
+            // Linux command
+            $command = sprintf(
+                '%s --headless --convert-to pdf --outdir %s %s 2>&1',
+                escapeshellarg($libreOfficePath),
+                escapeshellarg(dirname($docxPath)),
+                escapeshellarg($docxPath)
+            );
+        }
 
+        Log::info("Executing command: $command");
+        
         exec($command, $output, $returnCode);
+        
+        Log::info("Command output: " . implode("\n", $output));
+        Log::info("Return code: $returnCode");
 
-        if ($returnCode !== 0 || !file_exists($pdfPath)) {
-            throw new \Exception('LibreOffice conversion failed');
+        // Wait a bit for file to be created
+        sleep(1);
+
+        if (!file_exists($pdfPath)) {
+            $errorMsg = "PDF file not created. Output: " . implode("\n", $output);
+            Log::error($errorMsg);
+            throw new \Exception("Konversi PDF gagal. Pastikan LibreOffice terinstall dengan benar.");
         }
 
         return $pdfPath;
+    }
+
+    /**
+     * Find LibreOffice installation path
+     */
+    protected function findLibreOffice(): ?string
+    {
+        if ($this->isWindows()) {
+            // Windows paths
+            $possiblePaths = [
+                'C:\Program Files\LibreOffice\program\soffice.exe',
+                'C:\Program Files (x86)\LibreOffice\program\soffice.exe',
+                getenv('PROGRAMFILES') . '\LibreOffice\program\soffice.exe',
+                getenv('PROGRAMFILES(X86)') . '\LibreOffice\program\soffice.exe',
+            ];
+            
+            foreach ($possiblePaths as $path) {
+                if (file_exists($path)) {
+                    return $path;
+                }
+            }
+        } else {
+            // Linux paths
+            $possiblePaths = [
+                '/usr/bin/soffice',
+                '/usr/bin/libreoffice',
+                '/snap/bin/libreoffice',
+            ];
+
+            foreach ($possiblePaths as $path) {
+                if (file_exists($path)) {
+                    return $path;
+                }
+            }
+            
+            // Try using 'which' command
+            exec("which soffice 2>/dev/null", $output, $returnCode);
+            if ($returnCode === 0 && !empty($output)) {
+                return trim($output[0]);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Check if running on Windows
+     */
+    protected function isWindows(): bool
+    {
+        return strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
     }
 
     public function downloadPdf(PurchaseRequisition $pr)
