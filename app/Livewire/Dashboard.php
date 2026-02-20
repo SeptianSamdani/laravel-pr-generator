@@ -14,10 +14,18 @@ class Dashboard extends Component
     public $startDate;
     public $endDate;
     public $selectedOutlet = '';
+    
+    // NEW: Dashboard mode
+    public $dashboardMode = 'staff'; // 'staff' or 'manager'
 
     public function mount()
     {
         $this->setDateRange('this_month');
+        
+        // NEW: Determine dashboard mode based on user role
+        $this->dashboardMode = Auth::user()->hasAnyRole(['super_admin', 'admin', 'manager']) 
+            ? 'manager' 
+            : 'staff';
     }
 
     public function setDateRange($range)
@@ -59,14 +67,16 @@ class Dashboard extends Component
     {
         $query = PurchaseRequisition::query();
 
-        // Filter by user role
-        if (!Auth::user()->hasAnyRole(['super_admin', 'admin', 'manager'])) {
+        // NEW: Filter berdasarkan dashboard mode
+        if ($this->dashboardMode === 'staff') {
+            // Staff: HANYA lihat PR yang dibuat sendiri
             $query->where('created_by', Auth::id());
-        }
-
-        // Filter by outlet
-        if ($this->selectedOutlet) {
-            $query->where('outlet_id', $this->selectedOutlet);
+        } else {
+            // Manager/Admin: Lihat SEMUA PR
+            // Jika ada filter outlet, apply filter
+            if ($this->selectedOutlet) {
+                $query->where('outlet_id', $this->selectedOutlet);
+            }
         }
 
         return $query;
@@ -107,18 +117,22 @@ class Dashboard extends Component
         return [
             'total_prs' => $totalPRs,
             'total_amount' => $totalAmount,
-            'pending' => $submittedCount,      // ← Ganti 'submitted' jadi 'pending'
+            'pending' => $submittedCount,
             'approved' => $approvedCount,
             'paid' => $paidCount,
             'rejected' => $rejectedCount,
             'draft' => $draftCount,
             'percentage_change' => $percentageChange,
-            'approved_today' => PurchaseRequisition::where('status', 'approved')
-                ->whereDate('approved_at', today())
-                ->count(),
-            'paid_today' => PurchaseRequisition::where('status', 'paid')
-                ->whereDate('payment_uploaded_at', today())
-                ->count(),
+            'approved_today' => $this->dashboardMode === 'manager' 
+                ? PurchaseRequisition::where('status', 'approved')
+                    ->whereDate('approved_at', today())
+                    ->count()
+                : 0, // Staff tidak perlu data ini
+            'paid_today' => $this->dashboardMode === 'manager'
+                ? PurchaseRequisition::where('status', 'paid')
+                    ->whereDate('payment_uploaded_at', today())
+                    ->count()
+                : 0, // Staff tidak perlu data ini
         ];
     }
 
@@ -141,8 +155,14 @@ class Dashboard extends Component
             $startOfMonth = $date->copy()->startOfMonth();
             $endOfMonth = $date->copy()->endOfMonth();
 
-            $query = $this->getBaseQuery()
-                ->whereBetween('created_at', [$startOfMonth, $endOfMonth]);
+            $query = PurchaseRequisition::query();
+            
+            // NEW: Apply user filter
+            if ($this->dashboardMode === 'staff') {
+                $query->where('created_by', Auth::id());
+            }
+
+            $query->whereBetween('created_at', [$startOfMonth, $endOfMonth]);
 
             $data[] = [
                 'month' => $date->format('M'),
@@ -159,7 +179,12 @@ class Dashboard extends Component
 
     public function getTopOutletsProperty()
     {
-        return $this->getBaseQuery()
+        // NEW: Top outlets hanya untuk Manager
+        if ($this->dashboardMode === 'staff') {
+            return collect(); // Return empty collection untuk staff
+        }
+
+        return PurchaseRequisition::query()
             ->select('outlet_id', DB::raw('COUNT(*) as total_prs'), DB::raw('SUM(total) as total_amount'))
             ->with('outlet')
             ->groupBy('outlet_id')
@@ -177,16 +202,21 @@ class Dashboard extends Component
         }
 
         return [
-            'draft' => $query->clone()->where('status', 'draft')->count(),
-            'submitted' => $query->clone()->where('status', 'submitted')->count(),
-            'approved' => $query->clone()->where('status', 'approved')->count(),
-            'paid' => $query->clone()->where('status', 'paid')->count(),
-            'rejected' => $query->clone()->where('status', 'rejected')->count(),
+            'draft' => (clone $query)->where('status', 'draft')->count(),
+            'submitted' => (clone $query)->where('status', 'submitted')->count(),
+            'approved' => (clone $query)->where('status', 'approved')->count(),
+            'paid' => (clone $query)->where('status', 'paid')->count(),
+            'rejected' => (clone $query)->where('status', 'rejected')->count(),
         ];
     }
 
     public function getPendingApprovalsProperty()
     {
+        // NEW: Pending approvals hanya untuk Manager
+        if ($this->dashboardMode === 'staff') {
+            return collect(); // Return empty collection untuk staff
+        }
+
         if (!Auth::user()->can('pr.approve')) {
             return collect();
         }
@@ -201,17 +231,18 @@ class Dashboard extends Component
 
     public function render()
     {
-        $outlets = Outlet::where('is_active', true)->get();
+    $outlets = Outlet::where('is_active', true)->get();
 
-        return view('livewire.dashboard', [
-            'title' => 'Dashboard',
-            'stats' => $this->stats,
-            'recentPRs' => $this->recentPRs,
-            'monthlyChartData' => $this->monthlyChartData,
-            'topOutlets' => $this->topOutlets,
-            'statusDistribution' => $this->statusDistribution,
-            'pendingApprovals' => $this->pendingApprovals,
-            'outlets' => $outlets,
-        ])->layout('components.layouts.app');
+    return view('livewire.dashboard', [
+        'title' => 'Dashboard',
+        'stats' => $this->stats,
+        'recentPRs' => $this->recentPRs,
+        'monthlyChartData' => $this->monthlyChartData,
+        'topOutlets' => $this->topOutlets,
+        'statusDistribution' => $this->statusDistribution,
+        'pendingApprovals' => $this->pendingApprovals,
+        'outlets' => $outlets,
+        'dashboardMode' => $this->dashboardMode,
+    ])->layout('components.layouts.app');
     }
 }

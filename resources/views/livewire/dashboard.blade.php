@@ -3,8 +3,16 @@
     {{-- Header Section --}}
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-secondary-900">Dashboard Overview</h1>
-            <p class="text-sm text-secondary-500 mt-1">Track your purchase requisitions performance</p>
+            <h1 class="text-2xl font-bold text-secondary-900">
+                {{ $dashboardMode === 'manager' ? 'Manager Dashboard' : 'My Dashboard' }}
+            </h1>
+            <p class="text-sm text-secondary-500 mt-1">
+                @if($dashboardMode === 'manager')
+                    Overview semua purchase requisitions
+                @else
+                    Track purchase requisitions yang Anda buat
+                @endif
+            </p>
         </div>
         
         {{-- Quick Action --}}
@@ -18,45 +26,47 @@
         @endcan
     </div>
 
-    {{-- Filter Section - Minimalist --}}
-    <div class="bg-white rounded-xl border border-secondary-200 shadow-sm p-4">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {{-- Date Range --}}
-            <div>
-                <label class="text-xs font-medium text-secondary-600 mb-2 block">Period</label>
-                <select wire:model.live="dateRange" class="input text-sm">
-                    <option value="today">Today</option>
-                    <option value="this_week">This Week</option>
-                    <option value="this_month">This Month</option>
-                    <option value="last_month">Last Month</option>
-                    <option value="this_year">This Year</option>
-                    <option value="custom">Custom Range</option>
-                </select>
-            </div>
-
-            @if($dateRange === 'custom')
+    {{-- Filter Section - HANYA untuk Manager --}}
+    @if($dashboardMode === 'manager')
+        <div class="bg-white rounded-xl border border-secondary-200 shadow-sm p-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {{-- Date Range --}}
                 <div>
-                    <label class="text-xs font-medium text-secondary-600 mb-2 block">Start Date</label>
-                    <input type="date" wire:model.live="startDate" class="input text-sm">
+                    <label class="text-xs font-medium text-secondary-600 mb-2 block">Period</label>
+                    <select wire:model.live="dateRange" class="input text-sm">
+                        <option value="today">Today</option>
+                        <option value="this_week">This Week</option>
+                        <option value="this_month">This Month</option>
+                        <option value="last_month">Last Month</option>
+                        <option value="this_year">This Year</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
                 </div>
-                <div>
-                    <label class="text-xs font-medium text-secondary-600 mb-2 block">End Date</label>
-                    <input type="date" wire:model.live="endDate" class="input text-sm">
-                </div>
-            @endif
 
-            {{-- Outlet Filter --}}
-            <div>
-                <label class="text-xs font-medium text-secondary-600 mb-2 block">Outlet</label>
-                <select wire:model.live="selectedOutlet" class="input text-sm">
-                    <option value="">All Outlets</option>
-                    @foreach($outlets as $outlet)
-                        <option value="{{ $outlet->id }}">{{ $outlet->name }}</option>
-                    @endforeach
-                </select>
+                @if($dateRange === 'custom')
+                    <div>
+                        <label class="text-xs font-medium text-secondary-600 mb-2 block">Start Date</label>
+                        <input type="date" wire:model.live="startDate" class="input text-sm">
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-secondary-600 mb-2 block">End Date</label>
+                        <input type="date" wire:model.live="endDate" class="input text-sm">
+                    </div>
+                @endif
+
+                {{-- Outlet Filter --}}
+                <div>
+                    <label class="text-xs font-medium text-secondary-600 mb-2 block">Outlet</label>
+                    <select wire:model.live="selectedOutlet" class="input text-sm">
+                        <option value="">All Outlets</option>
+                        @foreach($outlets as $outlet)
+                            <option value="{{ $outlet->id }}">{{ $outlet->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
         </div>
-    </div>
+    @endif
 
     {{-- Stats Cards - Modern Minimalist --}}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -65,7 +75,9 @@
         <div class="bg-white rounded-xl border border-secondary-200 shadow-sm p-6 hover:shadow-md transition-shadow">
             <div class="flex items-start justify-between">
                 <div class="flex-1">
-                    <p class="text-xs font-medium text-secondary-500 uppercase tracking-wide">Total PRs</p>
+                    <p class="text-xs font-medium text-secondary-500 uppercase tracking-wide">
+                        {{ $dashboardMode === 'manager' ? 'Total PRs' : 'My PRs' }}
+                    </p>
                     <h3 class="text-3xl font-bold text-secondary-900 mt-2">{{ number_format($stats['total_prs']) }}</h3>
                     <div class="flex items-center gap-1 mt-2">
                         @if($stats['percentage_change'] >= 0)
@@ -112,7 +124,11 @@
                 <div class="flex-1">
                     <p class="text-xs font-medium text-green-700 uppercase tracking-wide">Approved</p>
                     <h3 class="text-3xl font-bold text-green-900 mt-2">{{ number_format($stats['approved']) }}</h3>
-                    <p class="text-xs text-green-600 mt-2">{{ $stats['approved_today'] }} approved today</p>
+                    @if($dashboardMode === 'manager')
+                        <p class="text-xs text-green-600 mt-2">{{ $stats['approved_today'] }} approved today</p>
+                    @else
+                        <p class="text-xs text-green-600 mt-2">Ready for payment</p>
+                    @endif
                 </div>
                 <div class="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
                     <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -128,7 +144,9 @@
                 <div class="flex-1">
                     <p class="text-xs font-medium text-primary-100 uppercase tracking-wide">Total Amount</p>
                     <h3 class="text-3xl font-bold text-white mt-2">{{ number_format($stats['total_amount'] / 1_000_000, 1) }}M</h3>
-                    <p class="text-xs text-primary-100 mt-2">Selected period</p>
+                    <p class="text-xs text-primary-100 mt-2">
+                        {{ $dashboardMode === 'manager' ? 'Selected period' : 'Your contributions' }}
+                    </p>
                 </div>
                 <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -148,7 +166,9 @@
             {{-- Chart Section --}}
             <div class="bg-white rounded-xl border border-secondary-200 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-secondary-100">
-                    <h3 class="text-sm font-semibold text-secondary-900 uppercase tracking-wide">PR Trends</h3>
+                    <h3 class="text-sm font-semibold text-secondary-900 uppercase tracking-wide">
+                        {{ $dashboardMode === 'manager' ? 'PR Trends' : 'My PR Trends' }}
+                    </h3>
                     <p class="text-xs text-secondary-500 mt-1">Last 6 months performance</p>
                 </div>
                 <div class="p-6">
@@ -162,7 +182,9 @@
             <div class="bg-white rounded-xl border border-secondary-200 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-secondary-100 flex items-center justify-between">
                     <div>
-                        <h3 class="text-sm font-semibold text-secondary-900 uppercase tracking-wide">Recent PRs</h3>
+                        <h3 class="text-sm font-semibold text-secondary-900 uppercase tracking-wide">
+                            {{ $dashboardMode === 'manager' ? 'Recent PRs' : 'My Recent PRs' }}
+                        </h3>
                         <p class="text-xs text-secondary-500 mt-1">Latest purchase requisitions</p>
                     </div>
                     <a href="{{ route('pr.index') }}" class="text-xs font-semibold text-primary-600 hover:text-primary-700 flex items-center gap-1">
@@ -226,7 +248,9 @@
                                         <svg class="w-12 h-12 mx-auto text-secondary-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
                                         </svg>
-                                        <p class="text-sm font-medium text-secondary-500">No recent purchase requisitions</p>
+                                        <p class="text-sm font-medium text-secondary-500">
+                                            {{ $dashboardMode === 'manager' ? 'No recent purchase requisitions' : 'You haven\'t created any PRs yet' }}
+                                        </p>
                                     </td>
                                 </tr>
                             @endforelse
@@ -252,64 +276,103 @@
                 </div>
             </div>
 
-            {{-- Top Outlets --}}
-            <div class="bg-white rounded-xl border border-secondary-200 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-secondary-100">
-                    <h3 class="text-sm font-semibold text-secondary-900 uppercase tracking-wide">Top Outlets</h3>
-                    <p class="text-xs text-secondary-500 mt-1">Highest PR volume</p>
-                </div>
-                <div class="p-6 space-y-4">
-                    @forelse($topOutlets as $index => $item)
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-secondary-100 text-secondary-700 font-bold flex items-center justify-center text-sm flex-shrink-0">
-                                {{ $index + 1 }}
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-semibold text-secondary-900 truncate">{{ $item->outlet->name }}</p>
-                                <div class="flex items-center gap-2 mt-0.5">
-                                    <span class="text-xs text-secondary-500">{{ $item->total_prs }} PRs</span>
-                                    <span class="text-xs text-secondary-300">•</span>
-                                    <span class="text-xs font-medium text-primary-600">Rp {{ number_format($item->total_amount / 1000000, 1) }}M</span>
+            {{-- Top Outlets - HANYA untuk Manager --}}
+            @if($dashboardMode === 'manager' && $topOutlets->count() > 0)
+                <div class="bg-white rounded-xl border border-secondary-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-secondary-100">
+                        <h3 class="text-sm font-semibold text-secondary-900 uppercase tracking-wide">Top Outlets</h3>
+                        <p class="text-xs text-secondary-500 mt-1">Highest PR volume</p>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        @foreach($topOutlets as $index => $item)
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-secondary-100 text-secondary-700 font-bold flex items-center justify-center text-sm flex-shrink-0">
+                                    {{ $index + 1 }}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-semibold text-secondary-900 truncate">{{ $item->outlet->name }}</p>
+                                    <div class="flex items-center gap-2 mt-0.5">
+                                        <span class="text-xs text-secondary-500">{{ $item->total_prs }} PRs</span>
+                                        <span class="text-xs text-secondary-300">•</span>
+                                        <span class="text-xs font-medium text-primary-600">Rp {{ number_format($item->total_amount / 1000000, 1) }}M</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    @empty
-                        <div class="text-center py-8">
-                            <p class="text-sm text-secondary-500">No data available</p>
-                        </div>
-                    @endforelse
+                        @endforeach
+                    </div>
                 </div>
-            </div>
+            @endif
 
-            {{-- Pending Approvals (Manager Only) --}}
-            @can('pr.approve')
-                @if($pendingApprovals->count() > 0)
-                    <div class="bg-amber-50 rounded-xl border border-amber-200 shadow-sm overflow-hidden">
-                        <div class="px-6 py-4 border-b border-amber-200 bg-amber-100">
-                            <h3 class="text-sm font-semibold text-amber-900 uppercase tracking-wide">Action Required</h3>
-                            <p class="text-xs text-amber-700 mt-1">{{ $pendingApprovals->count() }} pending approvals</p>
-                        </div>
-                        <div class="p-4 space-y-3">
-                            @foreach($pendingApprovals as $pr)
-                                <a href="{{ route('pr.show', $pr->id) }}" class="block p-3 bg-white rounded-lg border border-amber-200 hover:border-amber-300 hover:shadow-sm transition-all">
-                                    <div class="flex items-start justify-between gap-2">
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-semibold text-secondary-900 truncate">{{ $pr->pr_number }}</p>
-                                            <p class="text-xs text-secondary-500 mt-0.5">{{ $pr->outlet->name }}</p>
-                                            <p class="text-xs font-medium text-primary-600 mt-1">
-                                                Rp {{ number_format($pr->total, 0, ',', '.') }}
-                                            </p>
-                                        </div>
-                                        <svg class="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                        </svg>
+            {{-- Pending Approvals - HANYA untuk Manager --}}
+            @if($dashboardMode === 'manager' && $pendingApprovals->count() > 0)
+                <div class="bg-amber-50 rounded-xl border border-amber-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-amber-200 bg-amber-100">
+                        <h3 class="text-sm font-semibold text-amber-900 uppercase tracking-wide">Action Required</h3>
+                        <p class="text-xs text-amber-700 mt-1">{{ $pendingApprovals->count() }} pending approvals</p>
+                    </div>
+                    <div class="p-4 space-y-3">
+                        @foreach($pendingApprovals as $pr)
+                            <a href="{{ route('pr.show', $pr->id) }}" class="block p-3 bg-white rounded-lg border border-amber-200 hover:border-amber-300 hover:shadow-sm transition-all">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-semibold text-secondary-900 truncate">{{ $pr->pr_number }}</p>
+                                        <p class="text-xs text-secondary-500 mt-0.5">{{ $pr->outlet->name }}</p>
+                                        <p class="text-xs font-medium text-primary-600 mt-1">
+                                            Rp {{ number_format($pr->total, 0, ',', '.') }}
+                                        </p>
                                     </div>
-                                </a>
-                            @endforeach
+                                    <svg class="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            {{-- Quick Tips untuk Staff --}}
+            @if($dashboardMode === 'staff')
+                <div class="bg-gradient-to-br from-primary-50 to-orange-light-100 rounded-xl border-2 border-primary-200 shadow-sm overflow-hidden p-6">
+                    <div class="flex items-start gap-3 mb-4">
+                        <div class="w-10 h-10 bg-primary-500 rounded-lg flex items-center justify-center flex-shrink-0 shadow-orange">
+                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-secondary-900">Quick Tips</h4>
+                            <p class="text-xs text-secondary-600 mt-0.5">Cara membuat PR yang baik</p>
                         </div>
                     </div>
-                @endif
-            @endcan
+                    <ul class="space-y-2">
+                        <li class="flex items-start gap-2 text-xs">
+                            <svg class="w-4 h-4 text-primary-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-secondary-700">Upload <strong>invoice dari talent</strong> sebelum submit</span>
+                        </li>
+                        <li class="flex items-start gap-2 text-xs">
+                            <svg class="w-4 h-4 text-primary-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-secondary-700">Lengkapi <strong>data penerima transfer</strong></span>
+                        </li>
+                        <li class="flex items-start gap-2 text-xs">
+                            <svg class="w-4 h-4 text-primary-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-secondary-700">Pastikan <strong>tanda tangan digital</strong> sudah diupload</span>
+                        </li>
+                        <li class="flex items-start gap-2 text-xs">
+                            <svg class="w-4 h-4 text-primary-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-secondary-700">Draft dapat <strong>diedit kapan saja</strong></span>
+                        </li>
+                    </ul>
+                </div>
+            @endif
         </div>
     </div>
 
