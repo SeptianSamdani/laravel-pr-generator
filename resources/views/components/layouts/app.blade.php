@@ -144,5 +144,6 @@
     
     {{-- SCRIPTS --}}
     <x-layouts.scripts />
+    @stack('scripts')
 </body>
 </html>

@@ -76,6 +76,16 @@
                                 <p class="text-secondary-900">{{ $pr->alasan }}</p>
                             </div>
                         @endif
+                        @if($pr->social_media_link)
+                            <div class="col-span-2">
+                                <p class="text-sm text-secondary-600 mb-1">Link Promosi Sosmed</p>
+                                <a href="{{ $pr->social_media_link }}" 
+                                target="_blank"
+                                class="text-primary-600 hover:underline break-all text-sm font-medium">
+                                    {{ $pr->social_media_link }}
+                                </a>
+                            </div>
+                        @endif
                     </div>
 
                     <!-- Approval Info -->

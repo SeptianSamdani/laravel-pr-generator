@@ -23,6 +23,7 @@ class PrForm extends Component
     public $alasan;
     public $outlet_id;
     public $status = 'draft';
+    public $social_media_link = '';
     
     public $items = [];
     public $total = 0;
@@ -50,6 +51,7 @@ class PrForm extends Component
             'tanggal' => 'required|date',
             'perihal' => 'required|string|max:255',
             'alasan' => 'nullable|string|max:500',
+            'social_media_link' => 'nullable|url|max:500',
             'outlet_id' => 'required|exists:outlets,id',
             'items.*.nama_item' => 'required|string|max:255',
             'items.*.jumlah' => 'required|integer|min:1',
@@ -88,6 +90,7 @@ class PrForm extends Component
         'tanggal.required' => 'Tanggal harus diisi',
         'perihal.required' => 'Perihal harus diisi',
         'outlet_id.required' => 'Outlet harus dipilih',
+        'social_media_link.required' => 'Link Sosial Media harus diisi ',
         'items.*.nama_item.required' => 'Nama item harus diisi',
         'items.*.jumlah.required' => 'Jumlah harus diisi',
         'items.*.jumlah.min' => 'Jumlah minimal 1',
@@ -129,8 +132,11 @@ class PrForm extends Component
     {
         $pr = PurchaseRequisition::with(['items', 'invoices'])->findOrFail($id);
 
-        // Check authorization
-        if (!Auth::user()->can('pr.edit') && $pr->created_by !== Auth::id()) {
+        // Check authorization: harus pemilik PR atau manager/admin
+        $isOwner   = $pr->created_by === Auth::id();
+        $isManager = Auth::user()->hasAnyRole(['super_admin', 'admin', 'manager']);
+
+        if (!$isOwner && !$isManager) {
             abort(403, 'Unauthorized');
         }
 
@@ -142,6 +148,7 @@ class PrForm extends Component
         $this->tanggal = $pr->tanggal->format('Y-m-d');
         $this->perihal = $pr->perihal;
         $this->alasan = $pr->alasan;
+        $this->social_media_link = $pr->social_media_link ?? '';
         $this->outlet_id = $pr->outlet_id;
         $this->status = $pr->status;
         
@@ -152,7 +159,7 @@ class PrForm extends Component
         $this->recipient_phone = $pr->recipient_phone ?? '';
         
         // NEW: Load existing staff signature
-        $this->existingStaffSignature = $pr->staff_signature_path;
+        $this->existingStaffSignature = $pr->staff_signature_path ?? (Auth::user()->hasSignature() ? Auth::user()->signature_path : null);
 
         $this->items = $pr->items->map(function ($item) {
             return [
@@ -269,7 +276,7 @@ class PrForm extends Component
     try {
         // Validasi items minimal 1
         if (count($this->items) < 1) {
-            session()->flash('error', 'Minimal 1 item harus diisi');
+            $this->dispatch('notify', type: 'error', message: 'Minimal 1 item harus diisi');
             return;
         }
 
@@ -293,7 +300,7 @@ class PrForm extends Component
             
             // NEW: Cek recipient info
             if (empty($this->recipient_name) || empty($this->recipient_bank) || empty($this->recipient_account_number)) {
-                session()->flash('error', 'Data penerima transfer harus lengkap (Nama, Bank, Nomor Rekening) sebelum submit!');
+                $this->dispatch('notify', type: 'error', message: 'Data penerima transfer harus lengkap (Nama, Bank, Nomor Rekening) sebelum submit!');
                 return;
             }
         }
@@ -334,6 +341,7 @@ class PrForm extends Component
                     'tanggal' => $this->tanggal,
                     'perihal' => $this->perihal,
                     'alasan' => $this->alasan,
+                    'social_media_link' => $this->social_media_link,
                     'outlet_id' => $this->outlet_id,
                     'total' => $this->total,
                     'status' => $this->status,
@@ -347,6 +355,7 @@ class PrForm extends Component
                     'tanggal' => $this->tanggal,
                     'perihal' => $this->perihal,
                     'alasan' => $this->alasan,
+                    'social_media_link' => $this->social_media_link,
                     'outlet_id' => $this->outlet_id,
                     'total' => $this->total,
                     'status' => $this->status,

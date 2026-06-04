@@ -88,6 +88,23 @@
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
+
+                        <!-- Social Media Link -->
+                        <div>
+                            <label class="block text-sm font-semibold text-secondary-900 mb-2">
+                                Link Postingan / Sumber Promosi Sosmed
+                            </label>
+                            <input 
+                                type="url" 
+                                wire:model="social_media_link"
+                                class="input @error('social_media_link') input-error @enderror"
+                                placeholder="https://instagram.com/p/..."
+                            >
+                            @error('social_media_link')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                            <p class="mt-1 text-xs text-secondary-500">Opsional: Link postingan Instagram, TikTok, dll</p>
+                        </div>
                     </div>
                 </div>
 
@@ -437,137 +454,144 @@
                 </div>
 
                 <!-- Items -->
-                <div class="card animate-fade-in" style="animation-delay: 0.1s;">
-                    <div class="card-header flex items-center justify-between mb-2">
-                        <h3 class="text-primary-50 text-lg font-bold">Detail Item</h3>
-                        <button 
-                            type="button" 
-                            wire:click="addItem"
-                            class="btn-outline text-sm"
-                        >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                            </svg>
-                            Tambah Item
-                        </button>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="overflow-x-auto">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th class="w-12">No</th>
-                                        <th>Nama Item</th>
-                                        <th class="w-24">Jumlah</th>
-                                        <th class="w-32">Satuan</th>
-                                        <th class="w-40">Harga (Rp)</th>
-                                        <th class="w-40">Subtotal</th>
-                                        <th class="w-20">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($items as $index => $item)
-                                        <tr wire:key="item-{{ $index }}">
-                                            <td class="text-center font-semibold">{{ $index + 1 }}</td>
-                                            
-                                            <!-- Nama Item -->
-                                            <td>
-                                                <input 
-                                                    type="text" 
-                                                    wire:model.blur="items.{{ $index }}.nama_item"
-                                                    class="input @error('items.' . $index . '.nama_item') input-error @enderror"
-                                                    placeholder="Nama item"
-                                                >
-                                                @error('items.' . $index . '.nama_item')
-                                                    <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
-                                                @enderror
-                                            </td>
-
-                                            <!-- Jumlah -->
-                                            <td>
-                                                <input 
-                                                    type="number" 
-                                                    wire:model.blur="items.{{ $index }}.jumlah"
-                                                    class="input @error('items.' . $index . '.jumlah') input-error @enderror"
-                                                    min="1"
-                                                >
-                                                @error('items.' . $index . '.jumlah')
-                                                    <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
-                                                @enderror
-                                            </td>
-
-                                            <!-- Satuan -->
-                                            <td>
-                                                <input 
-                                                    type="text" 
-                                                    wire:model.blur="items.{{ $index }}.satuan"
-                                                    class="input @error('items.' . $index . '.satuan') input-error @enderror"
-                                                    placeholder="pcs"
-                                                >
-                                                @error('items.' . $index . '.satuan')
-                                                    <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
-                                                @enderror
-                                            </td>
-
-                                            <!-- Harga -->
-                                            <td>
-                                                <input 
-                                                    type="number" 
-                                                    wire:model.blur="items.{{ $index }}.harga"
-                                                    class="input @error('items.' . $index . '.harga') input-error @enderror"
-                                                    min="0"
-                                                    step="0.01"
-                                                >
-                                                @error('items.' . $index . '.harga')
-                                                    <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
-                                                @enderror
-                                            </td>
-
-                                            <!-- Subtotal -->
-                                            <td class="font-semibold text-primary-600">
-                                                Rp {{ number_format($item['subtotal'], 0, ',', '.') }}
-                                            </td>
-
-                                            <!-- Actions -->
-                                            <td class="text-center">
-                                                @if(count($items) > 1)
-                                                    <button 
-                                                        type="button"
-                                                        wire:click="removeItem({{ $index }})"
-                                                        class="text-red-600 hover:text-red-800 p-1"
-                                                        title="Hapus item"
-                                                    >
-                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                                        </svg>
-                                                    </button>
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    @endforeach
-
-                                    <!-- Total Row -->
-                                    <tr class="bg-orange-light-100 font-bold">
-                                        <td colspan="5" class="text-right uppercase text-secondary-900">Total</td>
-                                        <td class="text-primary-600 text-lg">
-                                            Rp {{ number_format($total, 0, ',', '.') }}
+                <div class="card animate-fade-in" style="animation-delay: 0.1s;" x-data="itemsCalculator()">
+                <div class="card-header flex items-center justify-between mb-2">
+                    <h3 class="text-primary-50 text-lg font-bold">Detail Item</h3>
+                    <button 
+                        type="button" 
+                        wire:click="addItem"
+                        class="btn-outline text-sm"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Tambah Item
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="overflow-x-auto">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th class="w-12">No</th>
+                                    <th>Nama Item</th>
+                                    <th class="w-24">Jumlah</th>
+                                    <th class="w-32">Satuan</th>
+                                    <th class="w-40">Harga (Rp)</th>
+                                    <th class="w-40">Subtotal</th>
+                                    <th class="w-20">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($items as $index => $item)
+                                    <tr wire:key="item-{{ $index }}">
+                                        <td class="text-center font-semibold">{{ $index + 1 }}</td>
+                                        
+                                        <!-- Nama Item -->
+                                        <td>
+                                            <input 
+                                                type="text" 
+                                                wire:model.blur="items.{{ $index }}.nama_item"
+                                                class="input @error('items.' . $index . '.nama_item') input-error @enderror"
+                                                placeholder="Nama item"
+                                            >
+                                            @error('items.' . $index . '.nama_item')
+                                                <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                                            @enderror
                                         </td>
-                                        <td></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
 
-                        @if(empty($items))
-                            <div class="p-8 text-center text-secondary-500">
-                                <svg class="w-16 h-16 mx-auto mb-4 text-secondary-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                </svg>
-                                <p class="font-semibold">Belum ada item</p>
-                                <p class="text-sm">Klik tombol "Tambah Item" untuk menambahkan item</p>
-                            </div>
-                        @endif
+                                        <!-- Jumlah -->
+                                        <td>                                            
+                                            <input 
+                                                type="number" 
+                                                wire:model.blur="items.{{ $index }}.jumlah"
+                                                x-data
+                                                x-on:input="$dispatch('recalculate')"
+                                                x-on:focus="$event.target.select()"
+                                                class="input @error('items.' . $index . '.jumlah') input-error @enderror"
+                                                min="1"
+                                                data-index="{{ $index }}"
+                                                data-field="jumlah"
+                                            >
+                                            @error('items.' . $index . '.jumlah')
+                                                <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                                            @enderror
+                                        </td>
+
+                                        <!-- Satuan -->
+                                        <td>
+                                            <input 
+                                                type="text" 
+                                                wire:model.blur="items.{{ $index }}.satuan"
+                                                class="input @error('items.' . $index . '.satuan') input-error @enderror"
+                                                placeholder="pcs"
+                                            >
+                                            @error('items.' . $index . '.satuan')
+                                                <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                                            @enderror
+                                        </td>
+
+                                        <!-- Harga -->
+                                        <td>
+                                            <input 
+                                                type="number" 
+                                                wire:model.blur="items.{{ $index }}.harga"
+                                                x-data
+                                                x-on:input="$dispatch('recalculate')"
+                                                x-on:focus="$event.target.select()"
+                                                class="input @error('items.' . $index . '.harga') input-error @enderror"
+                                                min="0"
+                                                step="1"
+                                                data-index="{{ $index }}"
+                                                data-field="harga"
+                                            >
+                                            @error('items.' . $index . '.harga')
+                                                <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                                            @enderror
+                                        </td>
+
+                                        <!-- Subtotal (client-side display) -->
+                                        <td class="font-semibold text-primary-600">
+                                            <span 
+                                                id="subtotal-{{ $index }}"
+                                                x-text="formatRupiah(subtotals[{{ $index }}] ?? {{ $item['subtotal'] }})"
+                                            >
+                                                Rp {{ number_format($item['subtotal'], 0, ',', '.') }}
+                                            </span>
+                                        </td>
+
+                                        <!-- Actions -->
+                                        <td class="text-center">
+                                            @if(count($items) > 1)
+                                                <button 
+                                                    type="button"
+                                                    wire:click="removeItem({{ $index }})"
+                                                    class="text-red-600 hover:text-red-800 p-1"
+                                                    title="Hapus item"
+                                                >
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                    </svg>
+                                                </button>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+
+                                <!-- Total Row -->
+                                <tr class="bg-orange-light-100 font-bold">
+                                    <td colspan="5" class="text-right uppercase text-secondary-900">Total</td>
+                                    <td class="text-primary-600 text-lg">
+                                        <span x-text="formatRupiah(grandTotal)">
+                                            Rp {{ number_format($total, 0, ',', '.') }}
+                                        </span>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
+                </div>
                 </div>
             </div>
 
@@ -669,3 +693,52 @@
         </div>
     </form>
 </div>
+
+@push('scripts')
+<script>
+function itemsCalculator() {
+    return {
+        subtotals: @json(array_column($items, 'subtotal')),
+        grandTotal: {{ $total }},
+
+        init() {
+            // Listen recalculate event dari input
+            this.$el.addEventListener('recalculate', () => this.recalculate());
+
+            // Setelah Livewire morphed (tambah/hapus item), 
+            // recalculate dari DOM — JANGAN reset dari PHP values
+            document.addEventListener('livewire:morphed', () => {
+                this.$nextTick(() => this.recalculate());
+            });
+        },
+
+        recalculate() {
+            const rows = this.$el.querySelectorAll('tbody tr[wire\\:key]');
+            let grand = 0;
+            const newSubtotals = [];
+
+            rows.forEach((row, index) => {
+                const jumlahInput = row.querySelector('[data-field="jumlah"]');
+                const hargaInput  = row.querySelector('[data-field="harga"]');
+
+                if (!jumlahInput || !hargaInput) return;
+
+                const jumlah   = parseFloat(jumlahInput.value) || 0;
+                const harga    = parseFloat(hargaInput.value)  || 0;
+                const subtotal = jumlah * harga;
+
+                newSubtotals[index] = subtotal;
+                grand += subtotal;
+            });
+
+            this.subtotals  = newSubtotals;
+            this.grandTotal = grand;
+        },
+
+        formatRupiah(value) {
+            return 'Rp ' + Math.round(value || 0).toLocaleString('id-ID');
+        }
+    }
+}
+</script>
+@endpush

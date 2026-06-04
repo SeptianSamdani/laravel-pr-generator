@@ -18,28 +18,25 @@ class PrManagementController extends Controller
     {
         $pr = PurchaseRequisition::findOrFail($prId);
 
+        // Authorization: hanya owner PR atau manager/admin yang boleh upload invoice
+        $isOwner   = $pr->created_by === Auth::id();
+        $isManager = Auth::user()->hasAnyRole(['super_admin', 'admin', 'manager']);
+
+        if (!$isOwner && !$isManager) {
+            abort(403, 'Unauthorized');
+        }
+
+        // Validate — di luar try-catch agar ValidationException (422) propagate dengan benar
+        $request->validate([
+            'invoices'   => 'required|array|min:1|max:5',
+            'invoices.*' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+        ]);
+
         try {
-            // Authorization
-            if ($pr->created_by !== Auth::id() && !Auth::user()->can('pr.edit')) {
-                abort(403, 'Unauthorized');
-            }
-
-            // Validate first
-            $request->validate([
-                'invoices' => 'required|array|max:5',
-                'invoices.*' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
-            ]);
-
             // Total size check
             $totalSize = collect($request->file('invoices'))->sum(fn($f) => $f->getSize());
             if ($totalSize > 26214400) {
                 return response()->json(['error' => 'Total file size melebihi 25MB'], 400);
-            }
-
-            // Disk space
-            $freeSpace = disk_free_space(storage_path('app/public'));
-            if ($freeSpace < 104857600) {
-                return response()->json(['error' => 'Storage penuh, hubungi admin'], 500);
             }
 
             $uploaded = [];
@@ -49,28 +46,30 @@ class PrManagementController extends Controller
 
                 $invoice = PrInvoice::create([
                     'purchase_requisition_id' => $pr->id,
-                    'file_name' => $file->getClientOriginalName(),
-                    'file_path' => $path,
-                    'file_type' => $file->getMimeType(),
-                    'file_size' => $file->getSize(),
-                    'uploaded_by' => Auth::id(),
+                    'file_name'               => $file->getClientOriginalName(),
+                    'file_path'               => $path,
+                    'file_type'               => $file->getMimeType(),
+                    'file_size'               => $file->getSize(),
+                    'uploaded_by'             => Auth::id(),
                 ]);
 
                 $uploaded[] = $invoice;
 
-                activity()
-                    ->causedBy(Auth::user())
-                    ->performedOn($pr)
-                    ->log("Invoice uploaded: {$invoice->file_name}");
+                try {
+                    activity()->causedBy(Auth::user())->performedOn($pr)
+                        ->log("Invoice uploaded: {$invoice->file_name}");
+                } catch (\Exception $logEx) {
+                    \Log::warning('Activity log failed: ' . $logEx->getMessage());
+                }
             }
 
             return response()->json([
-                'message' => count($uploaded) . ' invoice(s) uploaded successfully',
+                'message'  => count($uploaded) . ' invoice(s) uploaded successfully',
                 'invoices' => $uploaded,
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Invoice upload failed: '.$e->getMessage());
+            \Log::error('Invoice upload failed: ' . $e->getMessage());
             return response()->json(['error' => 'Upload gagal, coba lagi'], 500);
         }
     }
@@ -81,10 +80,13 @@ class PrManagementController extends Controller
     public function deleteInvoice($invoiceId)
     {
         $invoice = PrInvoice::findOrFail($invoiceId);
-        $pr = $invoice->purchaseRequisition;
+        $pr      = $invoice->purchaseRequisition;
 
-        // Authorization
-        if ($pr->created_by !== Auth::id() && !Auth::user()->can('pr.edit')) {
+        // Authorization: hanya owner PR atau manager/admin yang boleh delete invoice
+        $isOwner   = $pr->created_by === Auth::id();
+        $isManager = Auth::user()->hasAnyRole(['super_admin', 'admin', 'manager']);
+
+        if (!$isOwner && !$isManager) {
             abort(403, 'Unauthorized');
         }
 
@@ -96,18 +98,23 @@ class PrManagementController extends Controller
         }
 
         $fileName = $invoice->file_name;
+
+        if (Storage::disk('public')->exists($invoice->file_path)) {
+            Storage::disk('public')->delete($invoice->file_path);
+        }
+
         $invoice->delete();
 
-        // Log activity
-        activity()
-            ->causedBy(Auth::user())
-            ->performedOn($pr)
-            ->log('Invoice deleted: ' . $fileName);
+        try {
+            activity()->causedBy(Auth::user())->performedOn($pr)
+                ->log('Invoice deleted: ' . $fileName);
+        } catch (\Exception $logEx) {
+            \Log::warning('Activity log failed: ' . $logEx->getMessage());
+        }
 
-        return response()->json([
-            'message' => 'Invoice deleted successfully'
-        ]);
+        return response()->json(['message' => 'Invoice deleted successfully']);
     }
+
 
     /**
      * Approve PR & Upload Signature (Manager only)
@@ -287,6 +294,10 @@ class PrManagementController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        return Storage::download($invoice->file_path, $invoice->file_name);
+        if (!Storage::disk('public')->exists($invoice->file_path)) {
+            abort(404, 'File not found');
+        }
+
+        return Storage::disk('public')->download($invoice->file_path, $invoice->file_name);
     }
 }

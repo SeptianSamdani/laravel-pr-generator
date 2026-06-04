@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 
 class PrInvoice extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'purchase_requisition_id',
         'file_name',
@@ -40,13 +42,15 @@ class PrInvoice extends Model
 
     public function getFileSizeFormatted(): string
     {
-        $bytes = $this->file_size;
+        $bytes = (float) $this->file_size;
         $units = ['B', 'KB', 'MB', 'GB'];
-        
-        for ($i = 0; $bytes > 1024; $i++) {
+
+        $i = 0;
+        while ($i < count($units) - 1 && $bytes >= 1024) {
             $bytes /= 1024;
+            $i++;
         }
-        
+
         return round($bytes, 2) . ' ' . $units[$i];
     }
 

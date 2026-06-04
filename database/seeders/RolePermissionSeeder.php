@@ -70,17 +70,7 @@ class RolePermissionSeeder extends Seeder
         $superAdmin = Role::create(['name' => 'super_admin']);
         $superAdmin->givePermissionTo(Permission::all());
 
-        // 2. Admin Role
-        $admin = Role::create(['name' => 'admin']);
-        $admin->givePermissionTo([
-            'pr.view', 'pr.create', 'pr.edit', 'pr.delete', 'pr.submit', 'pr.download',
-            'user.view', 'user.create', 'user.edit', 'user.activate', 'user.deactivate', 'user.reset-password', 'user.assign-role',
-            'outlet.view', 'outlet.create', 'outlet.edit', 'outlet.delete',
-            'report.view', 'report.export',
-            'settings.view', 'activity.view',
-        ]);
-
-        // 3. Manager Role
+        // 2. Manager Role
         $manager = Role::create(['name' => 'manager']);
         $manager->givePermissionTo([
             'pr.view', 'pr.approve', 'pr.reject', 'pr.download',
@@ -90,19 +80,11 @@ class RolePermissionSeeder extends Seeder
             'activity.view',
         ]);
 
-        // 4. Staff Role
+        // 3. Staff Role
         $staff = Role::create(['name' => 'staff']);
         $staff->givePermissionTo([
             'pr.view', 'pr.create', 'pr.edit', 'pr.delete', 'pr.submit', 'pr.download',
             'outlet.view',
-        ]);
-
-        // 5. Viewer Role (Read-only)
-        $viewer = Role::create(['name' => 'viewer']);
-        $viewer->givePermissionTo([
-            'pr.view', 'pr.download',
-            'outlet.view',
-            'report.view',
         ]);
 
         // Create Users and Assign Roles
@@ -115,15 +97,6 @@ class RolePermissionSeeder extends Seeder
             'is_active' => true,
         ]);
         $superAdminUser->assignRole('super_admin');
-
-        // Admin User
-        $adminUser = User::create([
-            'name' => 'Admin User',
-            'email' => 'admin@company.com',
-            'password' => Hash::make('password'),
-            'is_active' => true,
-        ]);
-        $adminUser->assignRole('admin');
 
         // Manager User
         $managerUser = User::create([
@@ -152,22 +125,11 @@ class RolePermissionSeeder extends Seeder
         ]);
         $staffUser2->assignRole('staff');
 
-        // Viewer User
-        $viewerUser = User::create([
-            'name' => 'Finance Viewer',
-            'email' => 'viewer@company.com',
-            'password' => Hash::make('password'),
-            'is_active' => true,
-        ]);
-        $viewerUser->assignRole('viewer');
-
         $this->command->info('Roles and Permissions seeded successfully!');
         $this->command->info('Login Credentials:');
         $this->command->info('Super Admin: superadmin@company.com / password');
-        $this->command->info('Admin: admin@company.com / password');
         $this->command->info('Manager: manager@company.com / password');
         $this->command->info('Staff 1: staff1@company.com / password');
         $this->command->info('Staff 2: staff2@company.com / password');
-        $this->command->info('Viewer: viewer@company.com / password');
     }
 }

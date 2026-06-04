@@ -64,7 +64,7 @@ class PrList extends Component
                  && $user->can('pr.delete');
         
         if (!$isManager && !$isOwner) {
-            session()->flash('error', 'Anda tidak memiliki akses untuk menghapus PR ini');
+            $this->dispatch('notify', type: 'error', message: 'Anda tidak memiliki akses untuk menghapus PR ini');
             return;
         }
 
@@ -73,7 +73,7 @@ class PrList extends Component
             // Manager can delete Draft, Submitted, Approved, Rejected
             // But NOT Paid (financial record must be kept)
             if ($pr->isPaid()) {
-                session()->flash('error', 'PR dengan status Paid tidak dapat dihapus (financial record harus disimpan)');
+                $this->dispatch('notify', type: 'error', message: 'PR dengan status Paid tidak dapat dihapus (financial record harus disimpan)');
                 return;
             }
         } else if ($isOwner) {
@@ -116,7 +116,7 @@ class PrList extends Component
                 Storage::disk('public')->delete($pr->payment_proof_path);
             }
 
-            // 5. Delete PR items (cascaded by database, but explicit for clarity)
+            // 5. Delete PR items
             $pr->items()->delete();
 
             // 6. Delete PR
@@ -124,15 +124,20 @@ class PrList extends Component
             $prStatus = $pr->status;
             $pr->delete();
 
-            activity()
-                ->causedBy(Auth::user())
-                ->withProperties([
-                    'pr_number' => $prNumber,
-                    'deleted_by_role' => $user->roles->pluck('name')->first(),
-                    'status' => $prStatus,
-                    'is_owner' => $isOwner,
-                ])
-                ->log('PR deleted');
+            // 7. Log activity (non-critical — jangan batalkan delete jika gagal)
+            try {
+                activity()
+                    ->causedBy(Auth::user())
+                    ->withProperties([
+                        'pr_number'       => $prNumber,
+                        'deleted_by_role' => $user->roles->pluck('name')->first(),
+                        'status'          => $prStatus,
+                        'is_owner'        => $isOwner,
+                    ])
+                    ->log('PR deleted');
+            } catch (\Exception $logEx) {
+                \Log::warning('Activity log failed on PR delete: ' . $logEx->getMessage());
+            }
 
             session()->flash('success', "PR {$prNumber} (status: {$prStatus}) berhasil dihapus");
 
