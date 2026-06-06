@@ -65,9 +65,9 @@ class PrDetail extends Component
     {
         $user = Auth::user();
 
-        // Can edit if: own PR, status is draft, has permission
+        // Can edit if: own PR, status is draft/submitted/approved, has permission
         $this->canEdit = ($this->pr->created_by === $user->id || $user->can('pr.edit'))
-            && $this->pr->isDraft();
+            && in_array($this->pr->status, ['draft', 'submitted', 'approved']);
 
         // Can delete if: own PR, status is draft, has permission
         $this->canDelete = ($this->pr->created_by === $user->id || $user->can('pr.delete'))

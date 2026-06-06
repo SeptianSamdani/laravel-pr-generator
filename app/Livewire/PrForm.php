@@ -141,8 +141,8 @@ class PrForm extends Component
         }
 
         // Can't edit if not draft
-        if (!$pr->isDraft()) {
-            abort(403, 'Hanya PR dengan status draft yang dapat diedit');
+        if (!in_array($pr->status, ['draft', 'submitted',   'approved'])) {
+            abort(403, 'PR dengan status paid atau rejected tidak dapat diedit');
         }
 
         $this->tanggal = $pr->tanggal->format('Y-m-d');
@@ -251,7 +251,11 @@ class PrForm extends Component
 
     public function saveDraft()
     {
-        $this->status = 'draft';
+        // Jangan ubah status jika sudah submitted/approved
+        if ($this->status === 'draft') {
+            $this->status = 'draft';
+        }
+        // status submitted/approved tetap tidak berubah
         $this->save();
     }
 

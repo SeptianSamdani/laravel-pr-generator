@@ -203,8 +203,8 @@
                                                 </svg>
                                             </a>
 
-                                            <!-- Edit (only for draft) -->
-                                            @if($pr->status === 'draft')
+                                            <!-- Edit -->
+                                            @if(in_array($pr->status, ['draft', 'submitted', 'approved']))
                                                 @can('pr.edit')
                                                     <a 
                                                         href="{{ route('pr.edit', $pr->id) }}"
